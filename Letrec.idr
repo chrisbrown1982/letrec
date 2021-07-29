@@ -7,8 +7,8 @@ import Decidable.Equality
 mutual 
     data LetrecD : Type where 
         MkEmpty : LetrecD 
-        MkBind  : List (Nat, LetrecE) -> LetrecD
-        MkAppB  : (d1 : LetrecD) -> (d2 : LetrecD) -> LetrecD
+        MkBind  : (x : Nat) -> (e : LetrecE) -> LetrecD
+        MkSeqB  : (d1 : LetrecD) -> (d2 : LetrecD) -> LetrecD
 
     data LetrecE : Type where 
         MkVal    : (v : LetrecV) -> LetrecE 
@@ -28,13 +28,18 @@ lMinus (y::ys) x =
         Yes Refl => lMinus ys x
         No  c    => y :: (lMinus ys x)
 
-||| FV (E) is the set of free variables in expression E 
 
-fv : (e : LetrecE) -> List Nat
-fv (MkVal (MkVar n)) = [n]
-fv (MkVal (MkAbs x e)) = lMinus (fv e) x
-fv (MkAppE e1 e2) = (fv e1) ++ (fv e2)
-fv (MkLetRec d e) = ?here
+mutual 
+    fvD : (d : LetrecD) -> List Nat 
+    fvD (MkEmpty) = []
+    fvD (MkBind x e) = lMinus (fv e) x 
+    fvD (MkSeqB d1 rest) = fvD d1 ++ fvD rest 
+
+    fv : (e : LetrecE) -> List Nat
+    fv (MkVal (MkVar n)) = [n]
+    fv (MkVal (MkAbs x e)) = lMinus (fv e) x
+    fv (MkAppE e1 e2) = (fv e1) ++ (fv e2)
+    fv (MkLetRec d e) = fvD d ++ fv e
 
 ||| Capture Avoiding Substitution 
 ||| E[x:=E_1] stands for a capture avoiding subbstitution of E_1
