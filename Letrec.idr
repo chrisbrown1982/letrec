@@ -116,5 +116,21 @@ mutual
                             z'  = MkVal (MkVar z)
                         in  MkVal (MkAbs z (assert_total (subE (assert_total (subE e n z')) x eS)))
             
-    subE (MkLetRec d e) x eS = ?hole
-    
+    subE (MkLetRec MkEmpty e) x eS = MkLetRec MkEmpty (subE e x eS)
+    subE (MkLetRec (MkBind x_i e_i) e) x eS = 
+        let fvE_i    = fv e_i 
+            fvE      = fv e 
+            z_i      = S (plus (maximum fvE_i) (maximum fvE))
+            xInFVLet = (elem x_i fvE_i) || (elem x_i fvE) 
+            fvN      = fv eS 
+            x_i'     = mapXtoZ x_i xInFVLet fvN z_i
+        in MkLetRec (MkBind x_i' (subE e_i x_i (MkVal (MkVar x_i')))) (subE e x_i (MkVal (MkVar x_i'))) 
+    subE (MkLetRec (MkSeqB d1 d2) e) x eS = ?hole3
+
+    {-
+    mapXtoZ : (x_i : Nat) 
+       -> (xInFVLet : Bool)
+       -> (fvN : List Nat)
+       -> (z_i : Nat)
+       -> Nat  
+    -}
