@@ -99,3 +99,9 @@ export
 t1 : Expr 
 t1 = MkLetRec [ (0, MkLam 1 (MkIf (MkVar 1) (MkMul (MkVar 1) (MkApp (MkVar 0) (MkMinus (MkVar 1) (MkVal (MkInt 1))))) (MkVal (MkInt 1)))) ]
               (MkApp (MkVar 0) (MkVal (MkInt 5)))
+
+t2 : Expr 
+t2 = (MkLetRec [(5, MkVal (MkInt 1))] (MkAdd (MkVar 5) (MkVal (MkInt 3))))
+
+t3 : Expr 
+t3 = (MkLetRec [(5, MkVal (MkInt 1)), (4, (MkVal (MkInt 1)))] (MkAdd (MkVar 5) (MkVal (MkInt 3))))
