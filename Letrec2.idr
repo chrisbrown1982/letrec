@@ -15,6 +15,7 @@ mutual
        MkClosure : (env : Env) -> (e : Expr) -> Value 
        MkInt     : (n : Nat) -> Value 
        MkError   : Value 
+       MkExpr    : (e : Expr) -> Value 
 
     data Expr : Type where 
         MkVar    : (v : VarName) -> Expr 
@@ -42,7 +43,9 @@ mutual
     eval env (MkVal n) = n 
     eval env (MkVar v) = 
         case lookup v env of 
-            Just val => val 
+            Just (MkExpr e') => assert_total (eval env e')
+            Just val         => val  
+               
             Nothing  => MkError  
     eval env (MkLam v e) = MkClosure env (MkLam v e)
     eval (MkEnv env) (MkApp e1 e2) = 
@@ -55,9 +58,13 @@ mutual
         let v    = eval (MkEnv env) e1
             env' = MkEnv ((x1, v)::env)
         in eval env' e
-    eval (MkEnv env) (MkLetRec bnds body) = 
-        let env' = [(n, MkInt 42) | (n, e) <- bnds] ++ env
-        in ?hole -- eval (MkEnv env') body
+    eval (MkEnv env) (MkLetRec bnds body) =
+        let bnds' = map (\(n, e) => (n, MkExpr e)) bnds 
+        in eval (MkEnv (bnds'++env)) body 
+
+
+        -- let env' = [(n, eval env' e) | (n, e) <- bnds] ++ env
+        -- in ?hole -- eval (MkEnv env') body
 
         -- let env' = MkEnv (newEnv env bnds ++ env)
         -- in eval env' body
