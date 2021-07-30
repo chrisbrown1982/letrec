@@ -4,152 +4,98 @@ import Decidable.Equality
 
 %default total
 
-mutual 
-    data LetrecD : Type where 
-        MkEmpty : LetrecD 
-        MkBind  : (x : Nat) -> (e : LetrecE) -> LetrecD
-        MkSeqB  : (d1 : LetrecD) -> (d2 : LetrecD) -> LetrecD
+public export 
+VarName : Type 
+VarName = Nat 
 
-    data LetrecE : Type where 
-        MkVal    : (v : LetrecV) -> LetrecE 
-        MkAppE   : (e1 : LetrecE) -> (e2 : LetrecE) -> LetrecE
-        MkLetRec : (d : LetrecD) -> (e : LetrecE) -> LetrecE
+mutual
+    public export 
+    data Env : Type where 
+       MkEnv : List (VarName, Value) -> Env
 
-    data LetrecV : Type where 
-        MkVar : (n : Nat) -> LetrecV 
-        MkAbs : (n : Nat) -> (e : LetrecE) -> LetrecV
+    public export 
+    data Value : Type where 
+       MkClosure : (env : Env) -> (e : Expr) -> Value 
+       MkInt     : (n : Nat) -> Value 
+       MkError   : Value 
+       MkExpr    : (e : Expr) -> Value 
 
-||| lMinus l x = l - x 
-lMinus : (l : List Nat) -> (x : Nat) -> List Nat 
-lMinus [] x = []
-lMinus (y::ys) x = 
-    case decEq y x of 
-        Yes Refl => lMinus ys x
-        No  c    => y :: (lMinus ys x)
-mutual 
-    fvD : (d : LetrecD) -> List Nat 
-    fvD (MkEmpty) = []
-    fvD (MkBind x e) = lMinus (fv e) x 
-    fvD (MkSeqB d1 rest) = fvD d1 ++ fvD rest 
+    public export
+    data Expr : Type where 
+        MkVar    : (v : VarName) -> Expr 
+        MkApp    : (e1 : Expr) -> (e2 : Expr) -> Expr 
+        MkVal    : (n : Value) -> Expr 
+        MkBind   : (v : VarName) -> (e1 : Expr) -> (e2 : Expr) -> Expr 
+        MkLetRec : (bs : List (VarName, Expr)) -> (e : Expr) -> Expr 
+        MkLam    : (v : VarName) -> (e : Expr) -> Expr 
+        MkAdd    : (e1 : Expr) -> (e2 : Expr) -> Expr 
+        MkMul    : (e1 : Expr) -> (e2 : Expr) -> Expr
+        MkMinus  : (e1 : Expr) -> (e2 : Expr) -> Expr 
+        MkIf     : (c : Expr) -> (t : Expr) -> (e : Expr) -> Expr
 
-    fv : (e : LetrecE) -> List Nat
-    fv (MkVal (MkVar n)) = [n]
-    fv (MkVal (MkAbs x e)) = lMinus (fv e) x
-    fv (MkAppE e1 e2) = (fv e1) ++ (fv e2)
-    fv (MkLetRec d e) = fvD d ++ fv e
-
-maximum : List Nat -> Nat 
-maximum []  = Z
-maximum [x] = x 
-maximum (x::x'::xs) = assert_total (maximum ((if x >= x' then x else x')::xs))
-
-mapXtoZ : (x_i : Nat) 
-       -> (xInFVLet : Bool)
-       -> (fvN : List Nat)
-       -> (z_i : Nat)
-       -> Nat    
-mapXtoZ x_i xInFVLet fvN z_i =
-    case ((not xInFVLet) || (not (elem x_i fvN))) of
-       True  => x_i  
-       False => z_i 
+lookup : (v : VarName) -> (env : Env) -> Maybe Value 
+lookup v (MkEnv []) = Nothing 
+lookup v (MkEnv ((var, val)::rest)) = 
+    case decEq v var of 
+        Yes Refl => Just val 
+        No  c    => assert_total (lookup v (MkEnv rest))
 
 mutual 
-    subsLetD : (x_i : Nat)
-            -> (z_i : Nat)
-            -> (d : LetrecD)
-            -> LetrecD 
-    subsLetD x_i z_i MkEmpty = MkEmpty 
-    subsLetD x_i z_i (MkBind d e) = MkBind z_i (subE e x_i (MkVal (MkVar z_i)))
-    subsLetD x_i z_i (MkSeqB d1 d2) = MkSeqB (subsLetD x_i z_i d1) (subsLetD x_i z_i d2)
+    newEnv : (env : List (VarName, Value)) -> (bnds : List (VarName, Expr)) -> List (VarName, Value)
+    newEnv env []                       = env
+    newEnv env ((n, e)::bnds) = 
+        let t1 = (n, eval (MkEnv env) e) 
+        in  assert_total (newEnv (t1 :: env)  bnds)     
 
-    {-
-    subsLetDs : (x_i : Nat)
-           -> (z_i : Nat)
-           -> (ds : List LetrecD)
-           -> List LetrecD
-    subsLetDs x_i z_i [] = []
-    subsLetDs x_i z_i (MkEmpty :: ds) = MkEmpty :: (subsLetDs x_i z_i ds)
-    subsLetDs x_i z_i (MkBind d e :: ds) = MkBind z_i (subE e x_i (MkVal (MkVar z_i))) :: (subsLetDs x_i z_i ds) 
-    subsLetDs x_i z_i (MkSeqB d1 d2 :: ds) = MkSeqB (subsLetD x_i z_i d1) (subsLetD x_i z_i d2) :: (subsLetDs x_i z_i ds)  
-    -}
-    ||| Capture Avoiding Substitution 
-    ||| E[x:=E_1] stands for a capture avoiding subbstitution of E_1
-    ||| for each free occurrence of x in E
-    subE : (e : LetrecE) -> (x : Nat) -> (e1 : LetrecE) -> LetrecE
-    -- x[x:=N] = N
-    -- x[x:=N] = y; y != x
-    subE (MkVal (MkVar n)) x eS = 
-        case decEq n x of 
-            Yes Refl => eS
-            No  c    => (MkVal (MkVar n))
+    export
+    eval : (env : Env) -> (e : Expr) -> Value 
+    eval env (MkVal n) = n 
+    eval env (MkVar v) = 
+        case lookup v env of 
+            Just (MkExpr e') => assert_total (eval env e')
+            Just val         => val  
+            Nothing  => MkError  
+    eval env (MkLam v e) = MkClosure env (MkLam v e)
+    eval (MkEnv env) (MkApp e1 e2) = 
+        let v1 = eval (MkEnv env) e1 
+            v2 = eval (MkEnv env) e2 
+        in case v1 of 
+            MkClosure env1 (MkLam x e) => assert_total (eval (MkEnv ((x,v2)::env)) e)
+            _ => MkError 
+    eval (MkEnv env) (MkBind x1 e1 e) = 
+        let v    = eval (MkEnv env) e1
+            env' = MkEnv ((x1, v)::env)
+        in eval env' e
+    eval (MkEnv env) (MkLetRec bnds body) =
+        let bnds' = map (\(n, e) => (n, MkExpr e)) bnds 
+        in eval (MkEnv (bnds'++env)) body 
+    eval env (MkAdd e1 e2) =
+        case eval env e1 of 
+            MkInt v1 => 
+                case eval env e2 of 
+                    MkInt v2 => MkInt (plus v1 v2)
+                    _        => MkError
+            _ => MkError 
+    eval env (MkMul e1 e2) =
+        case eval env e1 of 
+            MkInt v1 => 
+                case eval env e2 of 
+                    MkInt v2 => MkInt (mult v1 v2)
+                    _        => MkError
+            _ => MkError 
+    eval env (MkMinus e1 e2) =
+            case eval env e1 of 
+                MkInt v1 => 
+                    case eval env e2 of 
+                        MkInt v2 => MkInt (minus v1 v2)
+                        _        => MkError
+                _ => MkError 
+    eval env (MkIf cond th el) =
+        case eval env cond of 
+            MkInt n => if n==0 then eval env el else eval env th 
+            _       => MkError 
 
-    -- (E_1 E_2)[x:=N] = E_1[x:=N]E_2[x:=N]
-    subE (MkAppE e1 e2) x eS = 
-        case subE e1 x eS of 
-            e1' => 
-                case subE e2 x eS of 
-                  e2' => MkAppE e1' e2' 
-
-    -- (\x.E)[x:=N] = \x.E
-    -- (\y.E)[x:=N] (y != x) = \z.E[y:=z][x:=N] 
-    -- where 
-    --    y = z if x !in FV(E) OR y !in FV(N), otherwise z is a fresh variable
-    -- I personally find this a bit confusing. 
-    -- Thompson's text (Page 29) has a more precise definition:
-    -- if e = \x.g then e[f/x] = e
-    -- if y is a variable distinct from x, and e = \y.g then 
-    --   - if y does not appear free in f, e[f/x] = \y.g[f/x] 
-    --   - if y does appear free in f, 
-    --        e[f/x] = \z.(g[z/y][f/x])
-    --     where z is a variable which does not appear in f or g. (Note that 
-    --      have an infinite collection of variables, so that we can always find such
-    --      a z.)
-    subE (MkVal (MkAbs n e)) x eS =
-        case decEq n x of 
-            Yes Refl => MkVal (MkAbs n e)
-            No  c    =>
-                case elem n (fv eS) of 
-                    False => MkVal (MkAbs n (subE e x eS))
-                    True => 
-                        let eS' = maximum (fv eS)
-                            e'  = maximum (fv e)
-                            z   = (S ( plus eS' e' ))
-                            z'  = MkVal (MkVar z)
-                        in  MkVal (MkAbs z (assert_total (subE (assert_total (subE e n z')) x eS)))
-            
-    subE (MkLetRec MkEmpty e) x eS = MkLetRec MkEmpty (subE e x eS)
-    subE (MkLetRec (MkBind x_i e_i) e) x eS = 
-        let fvE_i    = fv e_i 
-            fvE      = fv e 
-            z_i      = S (plus (maximum fvE_i) (maximum fvE))
-            xInFVLet = (elem x_i fvE_i) || (elem x_i fvE) 
-            fvN      = fv eS 
-            x_i'     = mapXtoZ x_i xInFVLet fvN z_i
-        in MkLetRec (MkBind x_i' (subE e_i x_i (MkVal (MkVar x_i')))) (subE e x_i (MkVal (MkVar x_i'))) 
-    subE (MkLetRec (MkSeqB d1 d2) e) x eS = 
-        let fvD1     = fvD d1
-            fvD2     = fvD d2
-            z_i      = S (plus (maximum fvD1) (maximum fvD2))
-            xInFVLet = (elem x_i fvD1) || (elem x_i fvD2)
-            fvN      = fv eS 
-            x_i'     = mapXtoZ x_i xInFVLet fvN z_i
-        in MkLetRec (MkSeqB (subsLetD x_i x_i' d1) (subsLetD x_i x_i' d2))
-
-
-    {-
-    subsLetD : (x_i : Nat)
-            -> (z_i : Nat)
-            -> (d : LetrecD)
-            -> LetrecD 
-    subsLetD x_i z_i MkEmpty = MkEmpty 
-    subsLetD x_i z_i (MkBind d e) = MkBind z_i (subE e x_i (MkVal (MkVar z_i)))
-    subsLetD x_i z_i (MkSeqB d1 d2) = MkSeqB (subsLetD x_i z_i d1) (subsLetD x_i z_i d2)
-    -}
-
-    {-
-    mapXtoZ : (x_i : Nat) 
-       -> (xInFVLet : Bool)
-       -> (fvN : List Nat)
-       -> (z_i : Nat)
-       -> Nat  
-    -}
+export
+t1 : Expr 
+t1 = MkLetRec [ (0, MkLam 1 (MkIf (MkVar 1) (MkMul (MkVar 1) (MkApp (MkVar 0) (MkMinus (MkVar 1) (MkVal (MkInt 1))))) (MkVal (MkInt 1)))) ]
+              (MkApp (MkVar 0) (MkVal (MkInt 5)))
