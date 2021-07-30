@@ -24,6 +24,10 @@ mutual
         MkBind   : (v : VarName) -> (e1 : Expr) -> (e2 : Expr) -> Expr 
         MkLetRec : (bs : List (VarName, Expr)) -> (e : Expr) -> Expr 
         MkLam    : (v : VarName) -> (e : Expr) -> Expr 
+        MkAdd    : (e1 : Expr) -> (e2 : Expr) -> Expr 
+        MkMul    : (e1 : Expr) -> (e2 : Expr) -> Expr
+        MkMinus  : (e1 : Expr) -> (e2 : Expr) -> Expr 
+        MkIf     : (c : Expr) -> (t : Expr) -> (e : Expr) -> Expr
 
 lookup : (v : VarName) -> (env : Env) -> Maybe Value 
 lookup v (MkEnv []) = Nothing 
@@ -45,7 +49,6 @@ mutual
         case lookup v env of 
             Just (MkExpr e') => assert_total (eval env e')
             Just val         => val  
-               
             Nothing  => MkError  
     eval env (MkLam v e) = MkClosure env (MkLam v e)
     eval (MkEnv env) (MkApp e1 e2) = 
@@ -61,6 +64,31 @@ mutual
     eval (MkEnv env) (MkLetRec bnds body) =
         let bnds' = map (\(n, e) => (n, MkExpr e)) bnds 
         in eval (MkEnv (bnds'++env)) body 
+    eval env (MkAdd e1 e2) =
+        case eval env e1 of 
+            MkInt v1 => 
+                case eval env e2 of 
+                    MkInt v2 => MkInt (plus v1 v2)
+                    _        => MkError
+            _ => MkError 
+    eval env (MkMul e1 e2) =
+        case eval env e1 of 
+            MkInt v1 => 
+                case eval env e2 of 
+                    MkInt v2 => MkInt (mult v1 v2)
+                    _        => MkError
+            _ => MkError 
+    eval env (MkMinus e1 e2) =
+            case eval env e1 of 
+                MkInt v1 => 
+                    case eval env e2 of 
+                        MkInt v2 => MkInt (minus v1 v2)
+                        _        => MkError
+                _ => MkError 
+    eval env (MkIf cond th el) =
+        case eval env cond of 
+            MkInt n => if n==0 then eval env el else eval env th 
+            _       => MkError 
 
 
         -- let env' = [(n, eval env' e) | (n, e) <- bnds] ++ env
@@ -68,3 +96,6 @@ mutual
 
         -- let env' = MkEnv (newEnv env bnds ++ env)
         -- in eval env' body
+t1 : Expr 
+t1 = MkLetRec [ (0, MkLam 1 (MkIf (MkVar 1) (MkMul (MkVar 1) (MkApp (MkVar 0) (MkMinus (MkVar 1) (MkVal (MkInt 1))))) (MkVal (MkInt 1)))) ]
+              (MkApp (MkVar 0) (MkVal (MkInt 5)))
