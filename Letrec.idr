@@ -62,6 +62,7 @@ mutual
     subsLetD x_i z_i (MkBind d e) = MkBind z_i (subE e x_i (MkVal (MkVar z_i)))
     subsLetD x_i z_i (MkSeqB d1 d2) = MkSeqB (subsLetD x_i z_i d1) (subsLetD x_i z_i d2)
 
+    {-
     subsLetDs : (x_i : Nat)
            -> (z_i : Nat)
            -> (ds : List LetrecD)
@@ -70,7 +71,7 @@ mutual
     subsLetDs x_i z_i (MkEmpty :: ds) = MkEmpty :: (subsLetDs x_i z_i ds)
     subsLetDs x_i z_i (MkBind d e :: ds) = MkBind z_i (subE e x_i (MkVal (MkVar z_i))) :: (subsLetDs x_i z_i ds) 
     subsLetDs x_i z_i (MkSeqB d1 d2 :: ds) = MkSeqB (subsLetD x_i z_i d1) (subsLetD x_i z_i d2) :: (subsLetDs x_i z_i ds)  
-
+    -}
     ||| Capture Avoiding Substitution 
     ||| E[x:=E_1] stands for a capture avoiding subbstitution of E_1
     ||| for each free occurrence of x in E
@@ -125,7 +126,25 @@ mutual
             fvN      = fv eS 
             x_i'     = mapXtoZ x_i xInFVLet fvN z_i
         in MkLetRec (MkBind x_i' (subE e_i x_i (MkVal (MkVar x_i')))) (subE e x_i (MkVal (MkVar x_i'))) 
-    subE (MkLetRec (MkSeqB d1 d2) e) x eS = ?hole3
+    subE (MkLetRec (MkSeqB d1 d2) e) x eS = 
+        let fvD1     = fvD d1
+            fvD2     = fvD d2
+            z_i      = S (plus (maximum fvD1) (maximum fvD2))
+            xInFVLet = (elem x_i fvD1) || (elem x_i fvD2)
+            fvN      = fv eS 
+            x_i'     = mapXtoZ x_i xInFVLet fvN z_i
+        in MkLetRec (MkSeqB (subsLetD x_i x_i' d1) (subsLetD x_i x_i' d2))
+
+
+    {-
+    subsLetD : (x_i : Nat)
+            -> (z_i : Nat)
+            -> (d : LetrecD)
+            -> LetrecD 
+    subsLetD x_i z_i MkEmpty = MkEmpty 
+    subsLetD x_i z_i (MkBind d e) = MkBind z_i (subE e x_i (MkVal (MkVar z_i)))
+    subsLetD x_i z_i (MkSeqB d1 d2) = MkSeqB (subsLetD x_i z_i d1) (subsLetD x_i z_i d2)
+    -}
 
     {-
     mapXtoZ : (x_i : Nat) 
