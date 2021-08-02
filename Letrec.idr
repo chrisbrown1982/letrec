@@ -111,3 +111,7 @@ t3 = (MkLetRec [(5, MkVal (MkInt 1)), (4, (MkVal (MkInt 1)))] (MkAdd (MkVar 5) (
 export 
 t4 : Expr 
 t4 = (MkLetRec [(5, MkVal (MkInt 1)), (4, (MkVal (MkInt 1)))] (MkApp (MkLam 5 (MkVar 5) ) (MkAdd (MkVar 5) (MkVal (MkInt 3)))  )  )
+
+export 
+t5 : Expr  
+t5 = (MkLetRec [(5, MkVal (MkInt 1)), (4, (MkVal (MkInt 1)))] (MkBind 5 (MkAdd (MkVar 5) (MkVal (MkInt 3))) (MkVar 5) )  )

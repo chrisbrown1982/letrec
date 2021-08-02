@@ -118,13 +118,13 @@ mutual
     deBruijn fresh  (MkVal n) = Right (MkVal n)
     deBruijn fresh  (MkBind v e1 e) =
         let fresh' = S fresh 
-            e1' = sub [] v fresh' e1 
-            e'  = sub [] v fresh' e 
+            e1' = sub [] v fresh e1 
+            e'  = sub [] v fresh e 
         in 
-            case deBruijn fresh'  e1 of 
+            case deBruijn fresh  e1' of 
                 Left x => Left x 
                 Right e1' => 
-                    case deBruijn fresh'  e of 
+                    case deBruijn fresh  e' of 
                         Left y => Left y 
                         Right e' => Right (MkBind fresh e1' e')
     deBruijn fresh  (MkLetRec bnds e) =
