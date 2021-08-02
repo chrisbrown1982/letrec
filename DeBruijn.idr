@@ -130,13 +130,16 @@ mutual
     deBruijn fresh  (MkLetRec bnds e) =
         case deBruijnBnds2 fresh  e bnds bnds of
             Left x => Left x 
-            Right (e', bnds') => Right (MkLetRec bnds' e')
+            Right (e', bnds') =>
+                case deBruijn fresh e' of 
+                    Left x => Left x 
+                    Right e'' => Right (MkLetRec bnds' e'')
     deBruijn fresh  (MkLam v e) = 
         let -- envMap' = (v, fresh) :: envMap 
             fresh'  = S fresh
-            e' = sub [] v fresh' e
+            e' = sub [] v fresh e
         in 
-            case deBruijn fresh'  e of
+            case deBruijn fresh e' of
                 Left x => Left x 
                 Right e' => Right (MkLam fresh e')
     deBruijn fresh  (MkAdd e1 e2) =
