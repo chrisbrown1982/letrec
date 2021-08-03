@@ -13,6 +13,13 @@ mutual
     data Env : Type where 
        MkEnv : List (VarName, Value) -> Env
 
+
+
+          -- case decEq x y of 
+          --  Yes Refl => Yes Refl
+          --  No neq => No (\Refl => neq Refl)
+      
+
     public export 
     data Value : Type where 
        MkClosure : (env : Env) -> (e : Expr) -> Value 
