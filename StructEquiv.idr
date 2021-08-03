@@ -348,7 +348,6 @@ mutual
                         No neq2 => No (\Refl => neq2 Refl) 
                 No neq3 => No (\Refl => neq3 Refl)
 
-
         decEq (MkVar _) (MkApp _ _) = No absurd 
         decEq (MkVar _) (MkVal _) = No absurd 
         decEq (MkVar _) (MkBind _ _ _) = No absurd 
@@ -359,7 +358,6 @@ mutual
         decEq (MkVar _) (MkMinus _ _) = No absurd 
         decEq (MkVar _) (MkIf _ _ _) = No absurd
         decEq (MkApp _ _) (MkVar _) = No absurd 
-
         decEq (MkApp _ _ ) (MkVal _) = No absurd 
         decEq (MkApp _ _) (MkBind _ _ _) = No absurd 
         decEq (MkApp _ _) (MkLetRec _ _) = No absurd 
@@ -368,7 +366,6 @@ mutual
         decEq (MkApp _ _) (MkMul _ _) = No absurd 
         decEq (MkApp _ _) (MkMinus _ _) = No absurd 
         decEq (MkApp _ _) (MkIf _ _ _) = No absurd
-
         decEq (MkVal _) (MkVar _) = No absurd
         decEq (MkVal _ ) (MkApp _ _) = No absurd 
         decEq (MkVal _) (MkBind _ _ _) = No absurd 
@@ -378,7 +375,6 @@ mutual
         decEq (MkVal _) (MkMul _ _) = No absurd 
         decEq (MkVal _) (MkMinus _ _) = No absurd 
         decEq (MkVal _) (MkIf _ _ _) = No absurd 
-        
         decEq (MkBind _ _ _ ) (MkVal _) = No absurd 
         decEq (MkBind _ _ _) (MkVar _) = No absurd
         decEq (MkBind _ _ _) (MkApp _ _) = No absurd 
@@ -388,7 +384,6 @@ mutual
         decEq (MkBind _ _ _) (MkMul _ _) = No absurd 
         decEq (MkBind _ _ _) (MkMinus _ _) = No absurd 
         decEq (MkBind _ _ _) (MkIf _ _ _) = No absurd
-        
         decEq (MkLetRec _ _) (MkVar _) = No absurd
         decEq (MkLetRec _ _) (MkApp _ _) = No absurd
         decEq (MkLetRec _ _) (MkVal _) = No absurd
@@ -398,7 +393,6 @@ mutual
         decEq (MkLetRec _ _) (MkMul _ _) = No absurd
         decEq (MkLetRec _ _) (MkMinus _ _) = No absurd
         decEq (MkLetRec _ _) (MkIf _ _ _) = No absurd
-
         decEq (MkLam _ _) (MkVar _) = No absurd
         decEq (MkLam _ _) (MkApp _ _) = No absurd
         decEq (MkLam _ _) (MkVal _) = No absurd
@@ -408,7 +402,6 @@ mutual
         decEq (MkLam _ _) (MkMul _ _) = No absurd
         decEq (MkLam _ _) (MkMinus _ _) = No absurd
         decEq (MkLam _ _) (MkIf _ _ _) = No absurd
-
         decEq (MkAdd _ _) (MkVar _) = No absurd
         decEq (MkAdd _ _) (MkApp _ _) = No absurd
         decEq (MkAdd _ _) (MkVal _) = No absurd
@@ -436,7 +429,6 @@ mutual
         decEq (MkMinus _ _) (MkAdd _ _) = No absurd
         decEq (MkMinus _ _) (MkMul _ _) = No absurd
         decEq (MkMinus _ _) (MkIf _ _ _) = No absurd
-
         decEq (MkIf _ _ _) (MkVar _) = No absurd
         decEq (MkIf _ _ _) (MkApp _ _) = No absurd
         decEq (MkIf _ _ _) (MkVal _) = No absurd
@@ -446,3 +438,30 @@ mutual
         decEq (MkIf _ _ _) (MkAdd _ _) = No absurd
         decEq (MkIf _ _ _) (MkMul _ _) = No absurd
         decEq (MkIf _ _ _) (MkMinus _ _) = No absurd
+
+{-
+data Rename : (lvl : Nat) -> (id : Nat) -> (oldN : Name Variable) -> (newN : Name Variable) -> (m1, m2: Hs98.HsModuleTy.HsModuleTy) -> Type where
+  MkRename :   DecldHsModuleTy lvl id oldN m1 
+            -> DecldHsModuleTy lvl id newN m2 
+            -> Struct m1 m1' -> Struct m2 m2' -> m1' = m2' -> Rename lvl id oldN newN m1 m2
+-}
+
+data StructEquiv : (p1, p2 : Expr) -> Type where 
+    MkStructEquiv : p1 = p2 -> StructEquiv p1 p2
+
+proveStructEq : (p1, p2 : Expr) 
+            -> Dec (StructEquiv p1 p2)
+proveStructEq p1 p2 = 
+    case decEq p1 p2 of 
+        Yes Refl => Yes (MkStructEquiv Refl)
+        No  neq  => No (\(MkStructEquiv Refl) => neq Refl)
+
+data FuncEquiv : (p1, p2 : Expr) -> Type where 
+    MkFuncEquiv : StructEquiv p1 p2 -> eval env1 p1 = eval env2 p2 -> FuncEquiv p1 p2
+
+proveFuncEq : {env1 : Env}
+           -> {env2 : Env}
+           -> (p1, p2 : Expr) 
+           -> (structEq : StructEquiv p1 p2) 
+           -> FuncEquiv p1 p2
+proveFuncEq {env1} {env2} p1 p1 (MkStructEquiv Refl) = MkFuncEquiv {env1} (MkStructEquiv Refl) Refl 
