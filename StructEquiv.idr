@@ -158,6 +158,114 @@ mutual
         uninhabited Refl impossible
     implementation Uninhabited (MkBind _ _ _= MkIf _ _ _) where 
         uninhabited Refl impossible
+    implementation Uninhabited (MkLetRec _ _ = MkVar _) where 
+        uninhabited Refl impossible
+    implementation Uninhabited (MkLetRec _ _ = MkApp _ _) where 
+        uninhabited Refl impossible
+    implementation Uninhabited (MkLetRec _ _ = MkVal _) where 
+        uninhabited Refl impossible
+    implementation Uninhabited (MkLetRec _ _ = MkBind _ _ _) where
+        uninhabited Refl impossible
+    implementation Uninhabited (MkLetRec _ _ = MkLam _ _) where
+        uninhabited Refl impossible
+    implementation Uninhabited (MkLetRec _ _ = MkAdd _ _) where
+        uninhabited Refl impossible
+    implementation Uninhabited (MkLetRec _ _ = MkMul _ _) where
+        uninhabited Refl impossible
+    implementation Uninhabited (MkLetRec _ _ = MkMinus _ _) where
+        uninhabited Refl impossible
+    implementation Uninhabited (MkLetRec _ _ = MkIf _ _ _) where
+        uninhabited Refl impossible
+    implementation Uninhabited  (MkLam _ _ = MkVar _) where
+        uninhabited Refl impossible
+    implementation Uninhabited  (MkLam _ _ = MkApp _ _) where
+        uninhabited Refl impossible
+    implementation Uninhabited  (MkLam _ _ = MkVal _) where
+        uninhabited Refl impossible
+    implementation Uninhabited  (MkLam _ _ = MkBind _ _ _) where
+        uninhabited Refl impossible
+    implementation Uninhabited  (MkLam _ _ = MkLetRec _ _) where
+        uninhabited Refl impossible
+    implementation Uninhabited  (MkLam _ _ = MkAdd _ _) where
+        uninhabited Refl impossible
+    implementation Uninhabited  (MkLam _ _ = MkMul _ _) where
+        uninhabited Refl impossible
+    implementation Uninhabited  (MkLam _ _ = MkMinus _ _) where
+        uninhabited Refl impossible
+    implementation Uninhabited  (MkLam _ _ = MkIf _ _ _) where
+        uninhabited Refl impossible
+    implementation Uninhabited  (MkAdd _ _ = MkVar _) where
+        uninhabited Refl impossible
+    implementation Uninhabited  (MkAdd _ _ = MkApp _ _) where
+        uninhabited Refl impossible
+    implementation Uninhabited  (MkAdd _ _ = MkVal _) where
+        uninhabited Refl impossible
+    implementation Uninhabited  (MkAdd _ _ = MkBind _ _ _) where    
+        uninhabited Refl impossible
+    implementation Uninhabited  (MkAdd _ _ = MkLetRec _ _) where
+        uninhabited Refl impossible
+    implementation Uninhabited  (MkAdd _ _ = MkLam _ _) where
+        uninhabited Refl impossible
+    implementation Uninhabited  (MkAdd _ _ = MkMul _ _) where
+        uninhabited Refl impossible
+    implementation Uninhabited  (MkAdd _ _ = MkMinus _ _) where
+        uninhabited Refl impossible
+    implementation Uninhabited  (MkAdd _ _ = MkIf _ _ _) where
+        uninhabited Refl impossible
+    implementation Uninhabited  (MkMul _ _ = MkVar _) where
+        uninhabited Refl impossible
+    implementation Uninhabited  (MkMul _ _ = MkApp _ _) where
+        uninhabited Refl impossible
+    implementation Uninhabited  (MkMul _ _ = MkVal _) where
+        uninhabited Refl impossible
+    implementation Uninhabited  (MkMul _ _ = MkBind _ _ _) where
+        uninhabited Refl impossible
+    implementation Uninhabited  (MkMul _ _ = MkLetRec _ _) where
+        uninhabited Refl impossible
+    implementation Uninhabited  (MkMul _ _ = MkLam _ _) where
+        uninhabited Refl impossible
+    implementation Uninhabited  (MkMul _ _ = MkAdd _ _) where
+        uninhabited Refl impossible
+    implementation Uninhabited  (MkMul _ _ = MkMinus _ _) where
+        uninhabited Refl impossible
+    implementation Uninhabited  (MkMul _ _ = MkIf _ _ _) where
+        uninhabited Refl impossible
+    implementation Uninhabited  (MkMinus _ _ = MkVar _) where
+        uninhabited Refl impossible
+    implementation Uninhabited  (MkMinus _ _ = MkApp _ _) where
+        uninhabited Refl impossible
+    implementation Uninhabited  (MkMinus _ _ = MkVal _) where
+        uninhabited Refl impossible
+    implementation Uninhabited  (MkMinus _ _ = MkBind _ _ _) where
+        uninhabited Refl impossible
+    implementation Uninhabited  (MkMinus _ _ = MkLetRec _ _) where
+        uninhabited Refl impossible
+    implementation Uninhabited  (MkMinus _ _ = MkLam _ _) where
+        uninhabited Refl impossible
+    implementation Uninhabited  (MkMinus _ _ = MkAdd _ _) where
+        uninhabited Refl impossible
+    implementation Uninhabited  (MkMinus _ _ = MkMul _ _) where
+        uninhabited Refl impossible
+    implementation Uninhabited  (MkMinus _ _ = MkIf _ _ _) where
+        uninhabited Refl impossible
+    implementation Uninhabited  (MkIf _ _ _ = MkVar _) where
+        uninhabited Refl impossible
+    implementation Uninhabited  (MkIf _ _ _ = MkApp _ _) where
+        uninhabited Refl impossible
+    implementation Uninhabited  (MkIf _ _ _ = MkVal _) where
+        uninhabited Refl impossible
+    implementation Uninhabited  (MkIf _ _ _ = MkBind _ _ _) where
+        uninhabited Refl impossible
+    implementation Uninhabited  (MkIf _ _ _ = MkLetRec _ _) where
+        uninhabited Refl impossible
+    implementation Uninhabited  (MkIf _ _ _ = MkLam _ _) where
+        uninhabited Refl impossible
+    implementation Uninhabited  (MkIf _ _ _ = MkAdd _ _) where
+        uninhabited Refl impossible
+    implementation Uninhabited  (MkIf _ _ _ = MkMul _ _) where
+        uninhabited Refl impossible
+    implementation Uninhabited  (MkIf _ _ _ = MkMinus _ _) where
+        uninhabited Refl impossible
 
 
     implementation Equality.DecEq Expr where 
@@ -188,6 +296,58 @@ mutual
                                 No  neq  => No (\Refl => neq Refl)
                         No neq2 => No (\Refl => neq2 Refl)
                 No neq3 => No (\Refl => neq3 Refl)
+
+        decEq (MkLetRec bnds1 e1) (MkLetRec bnds2 e2) = 
+            case decEq bnds1 bnds2 of 
+                Yes Refl => 
+                    case decEq e1 e2 of 
+                        Yes Refl => Yes Refl 
+                        No  neq1 => No (\Refl => neq1 Refl)
+                No  neq  => No (\Refl => neq Refl)
+
+        decEq (MkLam v1 e1) (MkLam v2 e2) = 
+            case decEq v1 v2 of 
+                Yes Refl => 
+                    case decEq e1 e2 of 
+                        Yes Refl => Yes Refl 
+                        No neq   => No (\Refl => neq Refl)
+                No neq2 => No (\Refl => neq2 Refl)
+
+        decEq (MkAdd e1 e2) (MkAdd e3 e4) = 
+            case decEq e1 e3 of 
+                Yes Refl => 
+                    case decEq e2 e4 of 
+                        Yes Refl => Yes Refl 
+                        No neq   => No (\Refl => neq Refl)
+                No neq2 => No (\Refl => neq2 Refl) 
+        
+        decEq (MkMul e1 e2) (MkMul e3 e4) = 
+            case decEq e1 e3 of 
+                Yes Refl => 
+                    case decEq e2 e4 of 
+                        Yes Refl => Yes Refl 
+                        No neq   => No (\Refl => neq Refl)
+                No neq2 => No (\Refl => neq2 Refl) 
+
+        decEq (MkMinus e1 e2) (MkMinus e3 e4) = 
+            case decEq e1 e3 of 
+                Yes Refl => 
+                    case decEq e2 e4 of 
+                        Yes Refl => Yes Refl 
+                        No neq   => No (\Refl => neq Refl)
+                No neq2 => No (\Refl => neq2 Refl)
+
+        decEq (MkIf c1 e1 e2) (MkIf c2 e3 e4) = 
+            case decEq c1 c2 of 
+                Yes Refl => 
+                    case decEq e1 e3 of 
+                        Yes Refl => 
+                            case decEq e2 e4 of 
+                                Yes Refl => Yes Refl 
+                                No neq => No (\Refl => neq Refl)
+                        No neq2 => No (\Refl => neq2 Refl) 
+                No neq3 => No (\Refl => neq3 Refl)
+
 
         decEq (MkVar _) (MkApp _ _) = No absurd 
         decEq (MkVar _) (MkVal _) = No absurd 
@@ -229,3 +389,60 @@ mutual
         decEq (MkBind _ _ _) (MkMinus _ _) = No absurd 
         decEq (MkBind _ _ _) (MkIf _ _ _) = No absurd
         
+        decEq (MkLetRec _ _) (MkVar _) = No absurd
+        decEq (MkLetRec _ _) (MkApp _ _) = No absurd
+        decEq (MkLetRec _ _) (MkVal _) = No absurd
+        decEq (MkLetRec _ _) (MkBind _ _ _) = No absurd
+        decEq (MkLetRec _ _) (MkLam _ _) = No absurd
+        decEq (MkLetRec _ _) (MkAdd _ _) = No absurd
+        decEq (MkLetRec _ _) (MkMul _ _) = No absurd
+        decEq (MkLetRec _ _) (MkMinus _ _) = No absurd
+        decEq (MkLetRec _ _) (MkIf _ _ _) = No absurd
+
+        decEq (MkLam _ _) (MkVar _) = No absurd
+        decEq (MkLam _ _) (MkApp _ _) = No absurd
+        decEq (MkLam _ _) (MkVal _) = No absurd
+        decEq (MkLam _ _) (MkBind _ _ _) = No absurd
+        decEq (MkLam _ _) (MkLetRec _ _) = No absurd
+        decEq (MkLam _ _) (MkAdd _ _) = No absurd
+        decEq (MkLam _ _) (MkMul _ _) = No absurd
+        decEq (MkLam _ _) (MkMinus _ _) = No absurd
+        decEq (MkLam _ _) (MkIf _ _ _) = No absurd
+
+        decEq (MkAdd _ _) (MkVar _) = No absurd
+        decEq (MkAdd _ _) (MkApp _ _) = No absurd
+        decEq (MkAdd _ _) (MkVal _) = No absurd
+        decEq (MkAdd _ _) (MkBind _ _ _) = No absurd
+        decEq (MkAdd _ _) (MkLetRec _ _) = No absurd
+        decEq (MkAdd _ _) (MkLam _ _) = No absurd
+        decEq (MkAdd _ _) (MkMul _ _) = No absurd
+        decEq (MkAdd _ _) (MkMinus _ _) = No absurd
+        decEq (MkAdd _ _) (MkIf _ _ _) = No absurd
+        decEq (MkMul _ _) (MkVar _) = No absurd
+        decEq (MkMul _ _) (MkApp _ _) = No absurd
+        decEq (MkMul _ _) (MkVal _) = No absurd
+        decEq (MkMul _ _) (MkBind _ _ _) = No absurd
+        decEq (MkMul _ _) (MkLetRec _ _) = No absurd
+        decEq (MkMul _ _) (MkLam _ _) = No absurd
+        decEq (MkMul _ _) (MkAdd _ _) = No absurd
+        decEq (MkMul _ _) (MkMinus _ _) = No absurd
+        decEq (MkMul _ _) (MkIf _ _ _) = No absurd
+        decEq (MkMinus _ _) (MkVar _) = No absurd
+        decEq (MkMinus _ _) (MkApp _ _) = No absurd
+        decEq (MkMinus _ _) (MkVal _) = No absurd
+        decEq (MkMinus _ _) (MkBind _ _ _) = No absurd
+        decEq (MkMinus _ _) (MkLetRec _ _) = No absurd
+        decEq (MkMinus _ _) (MkLam _ _) = No absurd
+        decEq (MkMinus _ _) (MkAdd _ _) = No absurd
+        decEq (MkMinus _ _) (MkMul _ _) = No absurd
+        decEq (MkMinus _ _) (MkIf _ _ _) = No absurd
+
+        decEq (MkIf _ _ _) (MkVar _) = No absurd
+        decEq (MkIf _ _ _) (MkApp _ _) = No absurd
+        decEq (MkIf _ _ _) (MkVal _) = No absurd
+        decEq (MkIf _ _ _) (MkBind _ _ _) = No absurd
+        decEq (MkIf _ _ _) (MkLetRec _ _) = No absurd
+        decEq (MkIf _ _ _) (MkLam _ _) = No absurd
+        decEq (MkIf _ _ _) (MkAdd _ _) = No absurd
+        decEq (MkIf _ _ _) (MkMul _ _) = No absurd
+        decEq (MkIf _ _ _) (MkMinus _ _) = No absurd
