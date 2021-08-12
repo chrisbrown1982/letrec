@@ -1,6 +1,7 @@
 module StructEquiv 
 
 import Letrec
+import DeBruijn
 import Decidable.Equality
 
 %default total
@@ -456,6 +457,31 @@ proveStructEq p1 p2 =
         Yes Refl => Yes (MkStructEquiv Refl)
         No  neq  => No (\(MkStructEquiv Refl) => neq Refl)
 
+
+-------------------------------------------------------------------
+
+data DeBruijn : (p, d : Expr) -> Type where 
+    MkDeBruijn : DeBruijn p (deBruijn 0 p) 
+
+data StructEquivNew : (p1, p2, d : Expr) -> Type where 
+    MkStructEquivNew : DeBruijn p1 d -> DeBruijn p2 d -> StructEquivNew p1 p2 d
+
+proveStructEqNew : (p1, p2 : Expr) 
+               -> (d ** StructEquivNew p1 p2 d)
+proveStructEqNew p1 p2 = 
+   case deBruijn 0 p1 of 
+        d1 => 
+            case deBruijn 0 p2 of 
+                d2 => 
+                     let d1' = MkDeBruijn {p=p1} 
+                         d2' = MkDeBruijn {p=p2}
+                     in 
+                        case decEq d1 d2 of 
+                            Yes Refl => ?hole -- (d1 ** MkStructEquivNew d1' d2')
+                            No  neq  => ?hole2
+-------------------------------------------------------------------
+
+
 data FuncEquiv : (p1, p2 : Expr) -> Type where 
     MkFuncEquiv : StructEquiv p1 p2 -> eval env1 p1 = eval env2 p2 -> FuncEquiv p1 p2
 
@@ -465,3 +491,15 @@ proveFuncEq : {env1 : Env}
            -> (structEq : StructEquiv p1 p2) 
            -> FuncEquiv p1 p2
 proveFuncEq {env1} {env2} p1 p1 (MkStructEquiv Refl) = MkFuncEquiv {env1} (MkStructEquiv Refl) Refl 
+
+-------------------------------------------------------------------
+
+
+data FuncEquivNew : (p1, p2 : Expr) -> Type where 
+    MkFuncEquivNew : StructEquivNew p1 p2 d -> FuncEquivNew p1 p2
+
+evalRefl : (p1 : Expr) 
+        -> (env : Env) 
+        -> eval env p1 = eval env p1 
+evalRefl p1 env = Refl
+

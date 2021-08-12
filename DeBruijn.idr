@@ -72,106 +72,87 @@ mutual
             Yes Refl => (fresh, e)::(updateV fresh v rest)
             No c => (v1,e)::(updateV fresh v rest)
 
-    deBruijnBnds : (x : VarName) -> (y : VarName) -> (bnds : List (VarName, Expr)) -> Either String (List (VarName, Expr))
-    deBruijnBnds x y [] = Right []
+    deBruijnBnds : (x : VarName) -> (y : VarName) -> (bnds : List (VarName, Expr)) -> List (VarName, Expr)
+    deBruijnBnds x y [] = []
     deBruijnBnds x y ((v,e)::bnds) = 
     --    case deBruijn fresh envMap e of 
       --      Left x => Left x
         --    Right e' => 
         case deBruijnBnds x y bnds of
-            Left y => Left y
-            Right bnds' => Right ((v,sub [] x y e) :: bnds')
+            bnds' => (v,sub [] x y e) :: bnds'
 
     deBruijnBnds2 : (fresh : Nat) 
                  -- -> (env : EnvMap) 
                  -> (e : Expr) 
                  -> (bnds : List (VarName, Expr)) 
                  -> (mutBnds : List (VarName, Expr)) 
-                 -> Either String (Expr, List (VarName, Expr))
-    deBruijnBnds2 fresh e bnds [] = Right (e, bnds) 
+                 -> (Expr, List (VarName, Expr))
+    deBruijnBnds2 fresh e bnds [] = (e, bnds) 
     deBruijnBnds2 fresh e bnds ((v,e1)::rest) = 
         let 
             -- envMap' = (v, fresh) :: envMap 
             fresh'  = S fresh
             bnds'   = updateV fresh v bnds 
         in 
-            case deBruijnBnds v fresh bnds' of
-                Left x => Left x
-                Right bnds'' =>
-                    deBruijnBnds2 fresh' (sub [] v fresh e) bnds'' rest 
+            deBruijnBnds2 fresh' (sub [] v fresh e) (deBruijnBnds v fresh bnds') rest 
 
+    export
     deBruijn : (fresh : Nat) 
             -- -> (env : List VarName) 
             -> (e : Expr) 
-            -> Either String Expr 
-    deBruijn fresh  (MkVar v) = Right (MkVar v)
+            -> Expr 
+    deBruijn fresh  (MkVar v) = MkVar v
        -- case lookup v envMap of
        --     Nothing => Left ("0" ++ " " ++ (show v) ++ " " ++ (show envMap)) 
        --     Just v2 => Right (MkVar v2)
     deBruijn fresh  (MkApp e1 e2) =
         case deBruijn fresh  e1 of 
-            Left x => Left x 
-            Right e1' => 
+            e1' => 
                 case deBruijn fresh  e2 of 
-                    Left y => Left y 
-                    Right e2' => Right (MkApp e1' e2')
-    deBruijn fresh  (MkVal n) = Right (MkVal n)
+                    e2' => MkApp e1' e2'
+    deBruijn fresh  (MkVal n) = MkVal n
     deBruijn fresh  (MkBind v e1 e) =
         let fresh' = S fresh 
             e1' = sub [] v fresh e1 
             e'  = sub [] v fresh e 
         in 
             case deBruijn fresh  e1' of 
-                Left x => Left x 
-                Right e1' => 
+                e1' => 
                     case deBruijn fresh  e' of 
-                        Left y => Left y 
-                        Right e' => Right (MkBind fresh e1' e')
+                        e' => MkBind fresh e1' e'
     deBruijn fresh  (MkLetRec bnds e) =
         case deBruijnBnds2 fresh  e bnds bnds of
-            Left x => Left x 
-            Right (e', bnds') =>
+            (e', bnds') =>
                 case deBruijn fresh e' of 
-                    Left x => Left x 
-                    Right e'' => Right (MkLetRec bnds' e'')
+                    e'' => MkLetRec bnds' e''
     deBruijn fresh  (MkLam v e) = 
         let -- envMap' = (v, fresh) :: envMap 
             fresh'  = S fresh
             e' = sub [] v fresh e
         in 
             case deBruijn fresh e' of
-                Left x => Left x 
-                Right e' => Right (MkLam fresh e')
+                e' => MkLam fresh e'
     deBruijn fresh  (MkAdd e1 e2) =
         case deBruijn fresh  e1 of 
-            Left x => Left x 
-            Right e1' => 
+            e1' => 
                 case deBruijn fresh  e2 of 
-                    Left y => Left y 
-                    Right e2' => Right (MkAdd e1' e2')
+                   e2' => MkAdd e1' e2'
     deBruijn fresh  (MkMinus e1 e2) =
         case deBruijn fresh  e1 of 
-            Left x => Left x 
-            Right e1' => 
+            e1' => 
                 case deBruijn fresh  e2 of 
-                    Left y => Left y 
-                    Right e2' => Right (MkMinus e1' e2')
+                    e2' => MkMinus e1' e2'
     deBruijn fresh  (MkMul e1 e2) =
         case deBruijn fresh  e1 of 
-            Left x => Left x 
-            Right e1' => 
+            e1' => 
                 case deBruijn fresh  e2 of 
-                    Left y => Left y 
-                    Right e2' => Right (MkMul e1' e2')
+                   e2' => MkMul e1' e2'
     deBruijn fresh  (MkIf cond th el) = 
         case deBruijn fresh  cond of 
-            Left x => Left x 
-            Right con' => 
-                case deBruijn fresh  th of 
-                    Left y => Left y 
-                    Right th' => 
-                        case deBruijn fresh  el of 
-                            Left z => Left z
-                            Right el' => Right (MkIf con' th' el')
+          con' => 
+            case deBruijn fresh  th of 
+              th' => 
+                case deBruijn fresh  el of 
+                    el' => MkIf con' th' el'
     -- deBruijn _ _ _ = ?end
 
