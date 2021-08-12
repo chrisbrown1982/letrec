@@ -459,26 +459,35 @@ proveStructEq p1 p2 =
 
 
 -------------------------------------------------------------------
+data Prog : (p : Expr) -> Type where 
+   MkProg : Prog a
 
 data DeBruijn : (p, d : Expr) -> Type where 
-    MkDeBruijn : DeBruijn p (deBruijn 0 p) 
+    MkDeBruijn : DeBruijn p (deBruijn 0 p)
 
-data StructEquivNew : (p1, p2, d : Expr) -> Type where 
-    MkStructEquivNew : DeBruijn p1 d -> DeBruijn p2 d -> StructEquivNew p1 p2 d
+data StructEquivNew : (px, py, d : Expr) -> Type where 
+    MkStructEquivNew : DeBruijn px d -> DeBruijn py d -> StructEquivNew px py d
 
 proveStructEqNew : (p1, p2 : Expr) 
                -> (d ** StructEquivNew p1 p2 d)
-proveStructEqNew p1 p2 = 
-   case deBruijn 0 p1 of 
-        d1 => 
-            case deBruijn 0 p2 of 
-                d2 => 
-                     let d1' = MkDeBruijn {p=p1} 
-                         d2' = MkDeBruijn {p=p2}
-                     in 
-                        case decEq d1 d2 of 
-                            Yes Refl => ?hole -- (d1 ** MkStructEquivNew d1' d2')
-                            No  neq  => ?hole2
+proveStructEqNew p1 p2 with (deBruijn 0 p1)
+  proveStructEqNew p1 p2 | d1 with (deBruijn 0 p1)
+    proveStructEqNew p1 p2 | d1 | d2 with (decEq d1 d2)
+      proveStructEqNew p1 p2 | d1 | d1 | Yes Refl = (d1 ** MkStructEquivNew MkDeBruijn MkDeBruijn)
+      proveStructEqNew p1 p2 | d1 | d2 | No c = ?hole
+{-
+proveStructEqNew p1 p2 with decEq (deBruijn 0 p1) (deBruijn 0 p2) of 
+            Yes Refl => 
+                case decEq p1 p2 of 
+                    Yes Refl => 
+                        let d1' = MkDeBruijn 
+                            d2' = MkDeBruijn
+                        in (d2 ** MkStructEquivNew ?h1 ?h2)
+                    No neq2 => ?hole3
+            No  neq  => ?hole2
+-}
+
+
 -------------------------------------------------------------------
 
 
