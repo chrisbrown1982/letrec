@@ -457,6 +457,15 @@ proveStructEq p1 p2 =
         Yes Refl => Yes (MkStructEquiv Refl)
         No  neq  => No (\(MkStructEquiv Refl) => neq Refl)
 
+data FuncEquiv : (p1, p2 : Expr) -> Type where 
+    MkFuncEquiv : StructEquiv p1 p2 -> eval env1 p1 = eval env2 p2 -> FuncEquiv p1 p2
+        
+proveFuncEq : {env1 : Env}
+           -> {env2 : Env}
+           -> (p1, p2 : Expr) 
+           -> (structEq : StructEquiv p1 p2) 
+           -> FuncEquiv p1 p2
+proveFuncEq {env1} {env2} p1 p1 (MkStructEquiv Refl) = MkFuncEquiv {env1} (MkStructEquiv Refl) Refl 
 
 -------------------------------------------------------------------
 data Prog : (p : Expr) -> Type where 
@@ -469,7 +478,6 @@ data StructEquivNew : (px, py, d : Expr) -> Type where
     MkStructEquivNew : DeBruijn px d -> DeBruijn py d -> StructEquivNew px py d
 
 
-
 proveStructEqNew : (p1, p2 : Expr) 
                -> Maybe (d ** StructEquivNew p1 p2 d)
 proveStructEqNew p1 p2 with (MkDeBruijn {p=p1})  
@@ -479,49 +487,19 @@ proveStructEqNew p1 p2 with (MkDeBruijn {p=p1})
                 Yes bob => Just ((deBruijn 0 p1) ** MkStructEquivNew d1 (rewrite bob in d2))
                 No neq => Nothing 
         
-         --  with (MkDeBruijn {p=p1})         
 
-{-               
-proveStructEqNew p1 p2 with (deBruijn 0 p1)
-  proveStructEqNew p1 p2 | d1 with (deBruijn 0 p1)
-    proveStructEqNew p1 p2 | d1 | d2 with (decEq d1 d2)
-      proveStructEqNew p1 p2 | d1 | d1 | Yes Refl = (d1 ** MkStructEquivNew ?h1 ?h2)
-      proveStructEqNew p1 p2 | d1 | d2 | No c = ?hole
--}
-{-
-proveStructEqNew p1 p2 with decEq (deBruijn 0 p1) (deBruijn 0 p2) of 
-            Yes Refl => 
-                case decEq p1 p2 of 
-                    Yes Refl => 
-                        let d1' = MkDeBruijn 
-                            d2' = MkDeBruijn
-                        in (d2 ** MkStructEquivNew ?h1 ?h2)
-                    No neq2 => ?hole3
-            No  neq  => ?hole2
--}
-
+lem1 : MkVar v = deBruijn 0 (MkVar v)
 
 -------------------------------------------------------------------
-
-
-data FuncEquiv : (p1, p2 : Expr) -> Type where 
-    MkFuncEquiv : StructEquiv p1 p2 -> eval env1 p1 = eval env2 p2 -> FuncEquiv p1 p2
-
-proveFuncEq : {env1 : Env}
-           -> {env2 : Env}
-           -> (p1, p2 : Expr) 
-           -> (structEq : StructEquiv p1 p2) 
-           -> FuncEquiv p1 p2
-proveFuncEq {env1} {env2} p1 p1 (MkStructEquiv Refl) = MkFuncEquiv {env1} (MkStructEquiv Refl) Refl 
-
--------------------------------------------------------------------
-
-
-data FuncEquivNew : (p1, p2 : Expr) -> Type where 
-    MkFuncEquivNew : StructEquivNew p1 p2 d -> FuncEquivNew p1 p2
+deBruijnLem1 : {env : Env} -> (p: Expr) -> DeBruijn p (deBruijn 0 p) -> eval env p = eval env (deBruijn 0 p) 
+deBruijnLem1 {env} (MkVar v) x with (assert_total (deBruijnLem1 {env} (MkVar v) x))
+    deBruijnLem1 {env} (MkVar v) x | hypa = rewrite hypa in Refl
+deBruijnLem1 p x = ?h1
+                                              
 
 evalRefl : (p1 : Expr) 
-        -> (env : Env) 
-        -> eval env p1 = eval env p1 
-evalRefl p1 env = Refl
+        -> eval (MkEnv []) p1 = eval (MkEnv []) p1 
+evalRefl p1 = Refl
 
+funcEquiv : {d : Expr} -> StructEquivNew p1 p2 d -> eval (MkEnv []) p1 = eval (MkEnv []) p2
+funcEquiv {d} (MkStructEquivNew d1 d2) = let r = evalRefl d in ?hole
