@@ -468,13 +468,26 @@ data DeBruijn : (p, d : Expr) -> Type where
 data StructEquivNew : (px, py, d : Expr) -> Type where 
     MkStructEquivNew : DeBruijn px d -> DeBruijn py d -> StructEquivNew px py d
 
+
+
 proveStructEqNew : (p1, p2 : Expr) 
-               -> (d ** StructEquivNew p1 p2 d)
+               -> Maybe (d ** StructEquivNew p1 p2 d)
+proveStructEqNew p1 p2 with (MkDeBruijn {p=p1})  
+    proveStructEqNew p1 p2 | d1 with (MkDeBruijn {p=p2})  
+        proveStructEqNew p1 p2 | d1 |  d2  = 
+            case decEq (deBruijn 0 p1) (deBruijn 0 p2) of 
+                Yes bob => Just ((deBruijn 0 p1) ** MkStructEquivNew d1 (rewrite bob in d2))
+                No neq => Nothing 
+        
+         --  with (MkDeBruijn {p=p1})         
+
+{-               
 proveStructEqNew p1 p2 with (deBruijn 0 p1)
   proveStructEqNew p1 p2 | d1 with (deBruijn 0 p1)
     proveStructEqNew p1 p2 | d1 | d2 with (decEq d1 d2)
-      proveStructEqNew p1 p2 | d1 | d1 | Yes Refl = (d1 ** MkStructEquivNew MkDeBruijn MkDeBruijn)
+      proveStructEqNew p1 p2 | d1 | d1 | Yes Refl = (d1 ** MkStructEquivNew ?h1 ?h2)
       proveStructEqNew p1 p2 | d1 | d2 | No c = ?hole
+-}
 {-
 proveStructEqNew p1 p2 with decEq (deBruijn 0 p1) (deBruijn 0 p2) of 
             Yes Refl => 
