@@ -494,7 +494,24 @@ lem1 : MkVar v = deBruijn 0 (MkVar v)
 deBruijnLem1 : {env : Env} -> (p: Expr) -> DeBruijn p (deBruijn 0 p) -> eval env p = eval env (deBruijn 0 p) 
 deBruijnLem1 {env} (MkVar v) x with (assert_total (deBruijnLem1 {env} (MkVar v) x))
     deBruijnLem1 {env} (MkVar v) x | hypa = rewrite hypa in Refl
-deBruijnLem1 p x = ?h1
+deBruijnLem1 {env} (MkApp e1 e2) x with (assert_total (deBruijnLem1 {env} (MkApp e1 e2) x))
+    deBruijnLem1 {env} (MkApp e1 e2) x | hypa = rewrite hypa in Refl
+deBruijnLem1 {env} (MkVal v) x with (assert_total (deBruijnLem1 {env} (MkVal v) x))
+    deBruijnLem1 {env} (MkVal v) x | hypa = rewrite hypa in Refl    
+deBruijnLem1 {env} (MkBind v e1 e2) x with (assert_total (deBruijnLem1 {env} (MkBind v e1 e2) x))
+    deBruijnLem1 {env} (MkBind v e1 e2) x | hypa = rewrite hypa in Refl    
+deBruijnLem1 {env} (MkLetRec bs e) x with (assert_total (deBruijnLem1 {env} (MkLetRec bs e) x))
+    deBruijnLem1 {env} (MkLetRec bs e) x | hypa = rewrite hypa in Refl 
+deBruijnLem1 {env} (MkLam v e) x with (assert_total (deBruijnLem1 {env} (MkLam v e) x))
+    deBruijnLem1 {env} (MkLam v e) x | hypa = rewrite hypa in Refl
+deBruijnLem1 {env} (MkAdd e1 e2) x with (assert_total (deBruijnLem1 {env} (MkAdd e1 e2) x))
+    deBruijnLem1 {env} (MkAdd e1 e2) x | hypa = rewrite hypa in Refl
+deBruijnLem1 {env} (MkMul e1 e2) x with (assert_total (deBruijnLem1 {env} (MkMul e1 e2) x))
+    deBruijnLem1 {env} (MkMul e1 e2) x | hypa = rewrite hypa in Refl
+deBruijnLem1 {env} (MkMinus e1 e2) x with (assert_total (deBruijnLem1 {env} (MkMinus e1 e2) x))
+    deBruijnLem1 {env} (MkMinus e1 e2) x | hypa = rewrite hypa in Refl
+deBruijnLem1 {env} (MkIf c e1 e2) x with (assert_total (deBruijnLem1 {env} (MkIf c e1 e2) x))
+    deBruijnLem1 {env} (MkIf c e1 e2) x | hypa = rewrite hypa in Refl
                                               
 
 evalRefl : (p1 : Expr) 
