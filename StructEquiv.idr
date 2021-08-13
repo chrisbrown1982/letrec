@@ -468,9 +468,6 @@ proveFuncEq : {env1 : Env}
 proveFuncEq {env1} {env2} p1 p1 (MkStructEquiv Refl) = MkFuncEquiv {env1} (MkStructEquiv Refl) Refl 
 
 -------------------------------------------------------------------
-data Prog : (p : Expr) -> Type where 
-   MkProg : Prog a
-
 data DeBruijn : (p, d : Expr) -> Type where 
     MkDeBruijn : DeBruijn p (deBruijn 0 p)
 
@@ -510,7 +507,7 @@ deBruijnLem1 {env} (MkMinus e1 e2) x with (assert_total (deBruijnLem1 {env} (MkM
 deBruijnLem1 {env} (MkIf c e1 e2) x with (assert_total (deBruijnLem1 {env} (MkIf c e1 e2) x))
     deBruijnLem1 {env} (MkIf c e1 e2) x | hypa = rewrite hypa in Refl
                                               
-
+-- not used...
 evalRefl : (p1 : Expr) 
         -> eval (MkEnv []) p1 = eval (MkEnv []) p1 
 evalRefl p1 = Refl
