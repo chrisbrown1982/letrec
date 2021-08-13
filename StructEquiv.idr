@@ -474,21 +474,18 @@ data Prog : (p : Expr) -> Type where
 data DeBruijn : (p, d : Expr) -> Type where 
     MkDeBruijn : DeBruijn p (deBruijn 0 p)
 
-data StructEquivNew : (px, py, d : Expr) -> Type where 
-    MkStructEquivNew : DeBruijn px d -> DeBruijn py d -> StructEquivNew px py d
+data StructEquivNew : (px, py : Expr) -> Type where 
+    MkStructEquivNew : (d1 = d2) -> DeBruijn px d1 -> DeBruijn py d2 -> StructEquivNew px py
 
 
 proveStructEqNew : (p1, p2 : Expr) 
-               -> Maybe (d ** StructEquivNew p1 p2 d)
+               -> Maybe (StructEquivNew p1 p2)
 proveStructEqNew p1 p2 with (MkDeBruijn {p=p1})  
     proveStructEqNew p1 p2 | d1 with (MkDeBruijn {p=p2})  
         proveStructEqNew p1 p2 | d1 |  d2  = 
             case decEq (deBruijn 0 p1) (deBruijn 0 p2) of 
-                Yes bob => Just ((deBruijn 0 p1) ** MkStructEquivNew d1 (rewrite bob in d2))
+                Yes bob => Just (MkStructEquivNew bob d1 d2)
                 No neq => Nothing 
-        
-
-lem1 : MkVar v = deBruijn 0 (MkVar v)
 
 -------------------------------------------------------------------
 deBruijnLem1 : {env : Env} -> (p: Expr) -> DeBruijn p (deBruijn 0 p) -> eval env p = eval env (deBruijn 0 p) 
@@ -518,6 +515,9 @@ evalRefl : (p1 : Expr)
         -> eval (MkEnv []) p1 = eval (MkEnv []) p1 
 evalRefl p1 = Refl
 
-funcEquiv : {d : Expr} -> (p1, p2 : Expr) -> StructEquivNew p1 p2 d -> eval (MkEnv []) p1 = eval (MkEnv []) p2
-funcEquiv p1 p2 (MkStructEquivNew MkDeBruijn d2) with (deBruijnLem1 {env=MkEnv []} p1 MkDeBruijn)
-    funcEquiv p1 p2 (MkStructEquivNew MkDeBruijn d2) | prf = rewrite prf in ?hole
+
+funcEquiv : (p1, p2 : Expr) -> StructEquivNew p1 p2 -> eval (MkEnv []) p1 = eval (MkEnv []) p2
+funcEquiv p1 p2 (MkStructEquivNew dEqd (MkDeBruijn {p=p1}) (MkDeBruijn {p=p2})) with (deBruijnLem1 {env=MkEnv []} p1 (MkDeBruijn {p=p1}))
+    funcEquiv p1 p2 (MkStructEquivNew dEqd (MkDeBruijn {p=p1}) (MkDeBruijn {p=p2})) | prf with (deBruijnLem1 {env=MkEnv []} p2 (MkDeBruijn {p=p2})) 
+        funcEquiv p1 p2 (MkStructEquivNew dEqd (MkDeBruijn {p=p1}) (MkDeBruijn {p=p2})) | prf | prf2 
+             = rewrite prf in rewrite prf2 in rewrite dEqd in Refl
