@@ -518,5 +518,6 @@ evalRefl : (p1 : Expr)
         -> eval (MkEnv []) p1 = eval (MkEnv []) p1 
 evalRefl p1 = Refl
 
-funcEquiv : {d : Expr} -> StructEquivNew p1 p2 d -> eval (MkEnv []) p1 = eval (MkEnv []) p2
-funcEquiv {d} (MkStructEquivNew d1 d2) = let r = evalRefl d in ?hole
+funcEquiv : {d : Expr} -> (p1, p2 : Expr) -> StructEquivNew p1 p2 d -> eval (MkEnv []) p1 = eval (MkEnv []) p2
+funcEquiv p1 p2 (MkStructEquivNew MkDeBruijn d2) with (deBruijnLem1 {env=MkEnv []} p1 MkDeBruijn)
+    funcEquiv p1 p2 (MkStructEquivNew MkDeBruijn d2) | prf = rewrite prf in ?hole
