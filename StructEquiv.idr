@@ -484,7 +484,7 @@ proveStructEqNew p1 p2 with (MkDeBruijn {p=p1})
     proveStructEqNew p1 p2 | d1 with (MkDeBruijn {p=p2})  
         proveStructEqNew p1 p2 | d1 |  d2  = 
             case decEq (deBruijn 0 p1) (deBruijn 0 p2) of 
-                Yes bob => Just (MkStructEquivNew bob d1 d2)
+                Yes prf => Just (MkStructEquivNew prf d1 d2)
                 No neq => Nothing 
 
 -------------------------------------------------------------------
