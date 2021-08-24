@@ -13,13 +13,10 @@ mutual
     data Env : Type where 
        MkEnv : List (VarName, Value) -> Env
 
-
-
           -- case decEq x y of 
           --  Yes Refl => Yes Refl
           --  No neq => No (\Refl => neq Refl)
       
-
     public export 
     data Value : Type where 
        MkClosure : (env : Env) -> (e : Expr) -> Value 
@@ -54,7 +51,7 @@ mutual
         let t1 = (n, eval (MkEnv env) e) 
         in  assert_total (newEnv (t1 :: env)  bnds)     
 
-    export
+    public export
     eval : (env : Env) -> (e : Expr) -> Value 
     eval env (MkVal n) = n 
     eval env (MkVar v) = 
@@ -62,13 +59,15 @@ mutual
             Just (MkExpr e') => assert_total (eval env e')
             Just val         => val  
             Nothing  => MkError  
-    eval env (MkLam v e) = MkClosure env (MkLam v e)
-    eval (MkEnv env) (MkApp e1 e2) = 
-        let v1 = eval (MkEnv env) e1 
-            v2 = eval (MkEnv env) e2 
-        in case v1 of 
-            MkClosure env1 (MkLam x e) => assert_total (eval (MkEnv ((x,v2)::env)) e)
-            _ => MkError 
+    eval env (MkLam v e) = MkError --- MkClosure env (MkLam v e)
+    -- eval (MkEnv env) (MkApp e1 e2) =
+    eval (MkEnv env) (MkApp (MkLam v e) e2) with (eval (MkEnv env) e2 )
+        eval (MkEnv env) (MkApp (MkLam v e) e2) | v2 =
+            (eval (MkEnv ((v,v2)::env)) e)
+        -- in case v1 of 
+        --    MkClosure env1 (MkLam x e) => assert_total (eval (MkEnv ((x,v2)::env)) e)
+        --    _ => MkError 
+    eval (MkEnv env) (MkApp e1 e2) = MkError
     eval (MkEnv env) (MkBind x1 e1 e) = 
         let v    = eval (MkEnv env) e1
             env' = MkEnv ((x1, v)::env)

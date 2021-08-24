@@ -29,6 +29,7 @@ lookup v ((v1, v2)::rest) =
         MkMinus  : (e1 : Expr) -> (e2 : Expr) -> Expr 
         MkIf     : (c : Expr) -> (t : Expr) -> (e : Expr) -> Expr
 -}
+public export
 sub : (env : List VarName) -> (x : VarName) -> (y : VarName) -> (e : Expr) -> Expr 
 sub env x y (MkVar v) = 
     case elem v env of 
@@ -96,7 +97,7 @@ mutual
         in 
             deBruijnBnds2 fresh' (sub [] v fresh e) (deBruijnBnds v fresh bnds') rest 
 
-    export
+    public export
     deBruijn : (fresh : Nat) 
             -- -> (env : List VarName) 
             -> (e : Expr) 

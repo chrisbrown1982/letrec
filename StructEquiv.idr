@@ -471,8 +471,26 @@ proveFuncEq {env1} {env2} p1 p1 (MkStructEquiv Refl) = MkFuncEquiv {env1} (MkStr
 data DeBruijn : (p, d : Expr) -> Type where 
     MkDeBruijn : DeBruijn p (deBruijn 0 p)
 
+data IndexExp : (p : Expr) -> (p' : InExpr e) -> Type where 
+    MkIndex : IndexExp p (indExp p')
+
+data Proj (p, d Expr) -> (p', d' : InExpr e) -> Type where  
+    MkProj : DeBruijn p d -> MkIndex p p' -> MkIndex d d' -> p' = d' -> Proj p d p' d'  
+
+{-
+ p  : Expr 
+ d  : deBruijn 0 p
+ p' : InExpr e 
+ d' : InExpr e 
+ Proj p d p' d'
+ -> evalIn [] p' = evalIn [] d'
+-}
+
+getRelDe : {p,d : Expr} -> DeBruijn p d -> Expr
+getRelDe {d=deBruijn 0 p} (MkDeBruijn) = deBruijn 0 p
+
 data StructEquivNew : (px, py : Expr) -> Type where 
-    MkStructEquivNew : (d1 = d2) -> DeBruijn px d1 -> DeBruijn py d2 -> StructEquivNew px py
+    MkStructEquivNew : (d1 = d2) -> DeBruijn px d1 -> DeBruijn py d2 -> Proj px d1 px' p1' -> Proj py d2 py' p2' -> StructEquivNew px py
 
 
 proveStructEqNew : (p1, p2 : Expr) 
@@ -485,28 +503,33 @@ proveStructEqNew p1 p2 with (MkDeBruijn {p=p1})
                 No neq => Nothing 
 
 -------------------------------------------------------------------
-deBruijnLem1 : {env : Env} -> (p: Expr) -> DeBruijn p (deBruijn 0 p) -> eval env p = eval env (deBruijn 0 p) 
-deBruijnLem1 {env} (MkVar v) x with (assert_total (deBruijnLem1 {env} (MkVar v) x))
-    deBruijnLem1 {env} (MkVar v) x | hypa = rewrite hypa in Refl
-deBruijnLem1 {env} (MkApp e1 e2) x with (assert_total (deBruijnLem1 {env} (MkApp e1 e2) x))
-    deBruijnLem1 {env} (MkApp e1 e2) x | hypa = rewrite hypa in Refl
-deBruijnLem1 {env} (MkVal v) x with (assert_total (deBruijnLem1 {env} (MkVal v) x))
-    deBruijnLem1 {env} (MkVal v) x | hypa = rewrite hypa in Refl    
-deBruijnLem1 {env} (MkBind v e1 e2) x with (assert_total (deBruijnLem1 {env} (MkBind v e1 e2) x))
-    deBruijnLem1 {env} (MkBind v e1 e2) x | hypa = rewrite hypa in Refl    
-deBruijnLem1 {env} (MkLetRec bs e) x with (assert_total (deBruijnLem1 {env} (MkLetRec bs e) x))
-    deBruijnLem1 {env} (MkLetRec bs e) x | hypa = rewrite hypa in Refl 
-deBruijnLem1 {env} (MkLam v e) x with (assert_total (deBruijnLem1 {env} (MkLam v e) x))
-    deBruijnLem1 {env} (MkLam v e) x | hypa = rewrite hypa in Refl
-deBruijnLem1 {env} (MkAdd e1 e2) x with (assert_total (deBruijnLem1 {env} (MkAdd e1 e2) x))
-    deBruijnLem1 {env} (MkAdd e1 e2) x | hypa = rewrite hypa in Refl
-deBruijnLem1 {env} (MkMul e1 e2) x with (assert_total (deBruijnLem1 {env} (MkMul e1 e2) x))
-    deBruijnLem1 {env} (MkMul e1 e2) x | hypa = rewrite hypa in Refl
-deBruijnLem1 {env} (MkMinus e1 e2) x with (assert_total (deBruijnLem1 {env} (MkMinus e1 e2) x))
-    deBruijnLem1 {env} (MkMinus e1 e2) x | hypa = rewrite hypa in Refl
-deBruijnLem1 {env} (MkIf c e1 e2) x with (assert_total (deBruijnLem1 {env} (MkIf c e1 e2) x))
-    deBruijnLem1 {env} (MkIf c e1 e2) x | hypa = rewrite hypa in Refl
-                                              
+deLam2 :   {env : Env} 
+        -> (v2 : VarName)
+        -> (e2 : Expr)
+        -> eval env (MkLam v2 e2) = eval env (MkLam 0 (deBruijn 0 (sub [] v2 0 e2))) 
+deLam2 {env=MkEnv e} v2 e2 = Refl
+    -- deLam2 v2 (MkVar v) | No contra = ?a11
+
+
+deLam3 : (e : Expr) 
+      -> (v : Nat) 
+      -> (e2 : Expr)
+      ->  eval (MkEnv [(v, eval (MkEnv []) e2)]) e = 
+          eval (MkEnv [(0, eval (MkEnv []) (deBruijn 0 e2))]) (deBruijn 0 (sub [] v 0 e)) 
+deLam3 (MkVar v1) v (MkVar v2) with (decEq v v1) 
+    deLam3 (MkVar v) v (MkVar v2) | Yes Refl = ?t0 
+    deLam3 (MkVar v1) v (MkVar v2) | No c    = ?t1
+deLam3 _ _ _ = ?t99
+
+deBruijnLem1 : {env : Env} -> (p: Expr) -> DeBruijn p (deBruijn 0 p) -> eval (MkEnv []) p = eval (MkEnv []) (deBruijn 0 p) 
+deBruijnLem1 {env} (MkVar v) x = Refl
+-- with (assert_total (deBruijnLem1 {env} (MkVar v) x))
+  --  deBruijnLem1 {env} (MkVar v) x | hypa = rewrite hypa in Refl
+deBruijnLem1 {env} (MkApp (MkLam v e) e2) x with (deLam2 {env} v e)
+    deBruijnLem1 {env} (MkApp (MkLam v e) e2) x | Refl with (deBruijnLem1 {env} e2 MkDeBruijn)
+    deBruijnLem1 {env} (MkApp (MkLam v e) e2) x  | Refl | prf2 =  ?g0
+deBruijnLem1 _ _ = ?never
+                                       
 -- not used...
 evalRefl : (p1 : Expr) 
         -> eval (MkEnv []) p1 = eval (MkEnv []) p1 
@@ -518,3 +541,4 @@ funcEquiv p1 p2 (MkStructEquivNew dEqd (MkDeBruijn {p=p1}) (MkDeBruijn {p=p2})) 
     funcEquiv p1 p2 (MkStructEquivNew dEqd (MkDeBruijn {p=p1}) (MkDeBruijn {p=p2})) | prf with (deBruijnLem1 {env=MkEnv []} p2 (MkDeBruijn {p=p2})) 
         funcEquiv p1 p2 (MkStructEquivNew dEqd (MkDeBruijn {p=p1}) (MkDeBruijn {p=p2})) | prf | prf2 
              = rewrite prf in rewrite prf2 in rewrite dEqd in Refl
+-}
