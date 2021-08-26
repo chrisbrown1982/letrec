@@ -3,16 +3,15 @@ module InExpr
 import Data.Vect
 import Data.Vect.Elem
 import Decidable.Equality
-import Letrec
 
 %default total  
 
 mutual 
   public export
   data InValue : Type where 
-     MkInt     : (n : Nat) -> Value 
-     MkError   : Value 
-     MkInExpr    : (e : InExpr) -> Value 
+     MkInt     : (n : Nat) -> InValue 
+     MkError   : InValue 
+     MkInExpr    : (e : InExpr) -> InValue 
 
   public export
   data InExpr : Type where 
@@ -35,7 +34,7 @@ replaceInEnv (x::xs) (There xinxs) y = x :: replaceByElem xs xinxs y
 
 
 inEval : {n : Nat}
-      -> (env : Vect n Value)
+      -> (env : Vect n InValue)
       -> InExpr 
       -> InValue
 inEval {n} env (MkVar pos) with (natToFin pos {n})
@@ -84,7 +83,12 @@ inEval env (MkIf c t el) with (inEval env c)
   inEval env (MkIf c t el) | MkInt c' =
     if c'==0 then inEval env el else inEval env t 
   inEval env (MkIf c t el) | _ = MkError
+-- inEval _ (MkLetRec _ _) = ?hole
 
-inEval env (MkLetRec bnds e) =
-     let bnds' = map (\(n, e) => (n, MkInExpr e)) bnds 
-        in eval (MkEnv (bnds'++env)) body 
+inEval env (MkLetRec [] e) = inEval env e 
+
+inEval {n} env (MkLetRec ((pos, e1)::bnds) e) with (natToFin pos {n})
+    inEval {n} env (MkLetRec ((pos, e1)::bnds) e) | Nothing = MkError 
+    inEval {n} env (MkLetRec ((pos, e1)::bnds) e) | Just l with (replaceAt l (MkInExpr e1) env)
+      inEval {n} env (MkLetRec ((pos, e1)::bnds) e) | Just l | env' with (assert_total (inEval env' (MkLetRec bnds e)))
+        inEval {n} env (MkLetRec ((pos, e1)::bnds) e) | Just l | env' | e' = ?hole
