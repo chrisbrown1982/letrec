@@ -90,5 +90,4 @@ inEval env (MkLetRec [] e) = inEval env e
 inEval {n} env (MkLetRec ((pos, e1)::bnds) e) with (natToFin pos {n})
     inEval {n} env (MkLetRec ((pos, e1)::bnds) e) | Nothing = MkError 
     inEval {n} env (MkLetRec ((pos, e1)::bnds) e) | Just l with (replaceAt l (MkInExpr e1) env)
-      inEval {n} env (MkLetRec ((pos, e1)::bnds) e) | Just l | env' with (assert_total (inEval env' (MkLetRec bnds e)))
-        inEval {n} env (MkLetRec ((pos, e1)::bnds) e) | Just l | env' | e' = ?hole
+      inEval {n} env (MkLetRec ((pos, e1)::bnds) e) | Just l | env' = (assert_total (inEval env' (MkLetRec bnds e)))
