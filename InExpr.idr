@@ -9,23 +9,22 @@ import Decidable.Equality
 mutual 
   public export
   data InValue : Type where 
-     MkInt     : (n : Nat) -> InValue 
-     MkError   : InValue 
+     MkInInt     : (n : Nat) -> InValue 
+     MkInError   : InValue 
      MkInExpr    : (e : InExpr) -> InValue 
 
   public export
   data InExpr : Type where 
-    MkVar    : (pos : Nat)  -> InExpr
-    MkApp    : (e1 : InExpr) -> (e2 : InExpr) -> InExpr
-    MkVal    : (n : Nat) -> InExpr
-    MkBind   : (pos : Nat) -> (e1 : InExpr) -> (e2 : InExpr) -> InExpr
-  --  MkLetRec : (bs : List (VarName, Expr)) -> (e : Expr) -> Expr 
-    MkLetRec : (pos : List (Nat, InExpr)) -> (e: InExpr) -> InExpr
-    MkLam    : (pos : Nat) -> (e1 : InExpr) -> InExpr
-    MkAdd    : (e1 : InExpr) -> (e2 : InExpr) -> InExpr 
-    MkMul    : (e1 : InExpr) -> (e2 : InExpr) -> InExpr
-    MkMinus  : (e1 : InExpr) -> (e2 : InExpr) -> InExpr 
-    MkIf     : (c : InExpr) -> (t : InExpr) -> (el : InExpr) -> InExpr
+    MkInVar    : (pos : Nat)  -> InExpr
+    MkInApp    : (e1 : InExpr) -> (e2 : InExpr) -> InExpr
+    MkInVal    : (n : Nat) -> InExpr
+    MkInBind   : (pos : Nat) -> (e1 : InExpr) -> (e2 : InExpr) -> InExpr
+    MkInLetRec : (pos : List (Nat, InExpr)) -> (e: InExpr) -> InExpr
+    MkInLam    : (pos : Nat) -> (e1 : InExpr) -> InExpr
+    MkInAdd    : (e1 : InExpr) -> (e2 : InExpr) -> InExpr 
+    MkInMul    : (e1 : InExpr) -> (e2 : InExpr) -> InExpr
+    MkInMinus  : (e1 : InExpr) -> (e2 : InExpr) -> InExpr 
+    MkInIf     : (c : InExpr) -> (t : InExpr) -> (el : InExpr) -> InExpr
 
 
 replaceInEnv : (xs : Vect k t) -> Elem x xs -> t -> Vect k t
@@ -37,57 +36,57 @@ inEval : {n : Nat}
       -> (env : Vect n InValue)
       -> InExpr 
       -> InValue
-inEval {n} env (MkVar pos) with (natToFin pos {n})
-    inEval {n} env (MkVar pos) | Nothing = MkError
-    inEval {n} env (MkVar pos) | Just l with (index l env)
-        inEval {n} env (MkVar pos) | Just l | val = val
+inEval {n} env (MkInVar pos) with (natToFin pos {n})
+    inEval {n} env (MkInVar pos) | Nothing = MkInError
+    inEval {n} env (MkInVar pos) | Just l with (index l env)
+        inEval {n} env (MkInVar pos) | Just l | val = val
 
-inEval {n} env (MkApp (MkLam pos e1) e2) with (inEval env e2) -- evaluate e2 at position prf of env and then evaluate e1 
-  inEval {n} env (MkApp (MkLam pos e1) e2) | MkError = MkError 
-  inEval {n} env (MkApp (MkLam pos e1) e2) | e2' with (natToFin pos {n})
-    inEval {n} env (MkApp (MkLam pos e1) e2) | e2' | Nothing = MkError 
-    inEval {n} env (MkApp (MkLam pos e1) e2) | e2' | Just l with (replaceAt l e2' env)
-      inEval {n} env (MkApp (MkLam pos e1) e2) | e2' | Just l | env' = inEval env' e1
+inEval {n} env (MkInApp (MkInLam pos e1) e2) with (inEval env e2) -- evaluate e2 at position prf of env and then evaluate e1 
+  inEval {n} env (MkInApp (MkInLam pos e1) e2) | MkInError = MkInError 
+  inEval {n} env (MkInApp (MkInLam pos e1) e2) | e2' with (natToFin pos {n})
+    inEval {n} env (MkInApp (MkInLam pos e1) e2) | e2' | Nothing = MkInError 
+    inEval {n} env (MkInApp (MkInLam pos e1) e2) | e2' | Just l with (replaceAt l e2' env)
+      inEval {n} env (MkInApp (MkInLam pos e1) e2) | e2' | Just l | env' = inEval env' e1
 
-inEval env (MkApp e1 e2) = MkError 
-inEval env (MkVal n) = MkInt n
+inEval env (MkInApp e1 e2) = MkInError 
+inEval env (MkInVal n) = MkInInt n
 
-inEval {n} env (MkBind pos e1 e2) with (inEval env e1) 
-  inEval {n} env (MkBind pos e1 e2) | MkError = MkError 
-  inEval {n} env (MkBind pos e1 e2) | e1' with (natToFin pos {n})
-    inEval {n} env (MkBind pos e1 e2) | e1' | Nothing = MkError 
-    inEval {n} env (MkBind pos e1 e2) | e1' | Just l with (replaceAt l e1' env) 
-      inEval {n} env (MkBind pos e1 e2) | e1' | Just l | env' = inEval env' e2
+inEval {n} env (MkInBind pos e1 e2) with (inEval env e1) 
+  inEval {n} env (MkInBind pos e1 e2) | MkInError = MkInError 
+  inEval {n} env (MkInBind pos e1 e2) | e1' with (natToFin pos {n})
+    inEval {n} env (MkInBind pos e1 e2) | e1' | Nothing = MkInError 
+    inEval {n} env (MkInBind pos e1 e2) | e1' | Just l with (replaceAt l e1' env) 
+      inEval {n} env (MkInBind pos e1 e2) | e1' | Just l | env' = inEval env' e2
 
-inEval env (MkLam prf e1) = MkError 
+inEval env (MkInLam prf e1) = MkInError 
 
-inEval env (MkAdd e1 e2) with (inEval env e1)
-  inEval env (MkAdd e1 e2) | MkInt e1' with (inEval env e2) 
-    inEval env (MkAdd e1 e2) | MkInt e1' | MkInt e2' = MkInt (plus e1' e2')
-    inEval env (MkAdd e1 e2) | MkInt e1' | _ = MkError  
-  inEval env (MkAdd e1 e2) | _ = MkError 
+inEval env (MkInAdd e1 e2) with (inEval env e1)
+  inEval env (MkInAdd e1 e2) | MkInInt e1' with (inEval env e2) 
+    inEval env (MkInAdd e1 e2) | MkInInt e1' | MkInInt e2' = MkInInt (plus e1' e2')
+    inEval env (MkInAdd e1 e2) | MkInInt e1' | _ = MkInError  
+  inEval env (MkInAdd e1 e2) | _ = MkInError 
 
-inEval env (MkMul e1 e2) with (inEval env e1)
-  inEval env (MkMul e1 e2) | MkInt e1' with (inEval env e2) 
-    inEval env (MkMul e1 e2) | MkInt e1' | MkInt e2' = MkInt (mult e1' e2')
-    inEval env (MkMul e1 e2) | MkInt e1' | _ = MkError 
-  inEval env (MkMul e1 e2) | _ = MkError 
+inEval env (MkInMul e1 e2) with (inEval env e1)
+  inEval env (MkInMul e1 e2) | MkInInt e1' with (inEval env e2) 
+    inEval env (MkInMul e1 e2) | MkInInt e1' | MkInInt e2' = MkInInt (mult e1' e2')
+    inEval env (MkInMul e1 e2) | MkInInt e1' | _ = MkInError 
+  inEval env (MkInMul e1 e2) | _ = MkInError 
 
-inEval env (MkMinus e1 e2) with (inEval env e1)
-  inEval env (MkMinus e1 e2) | MkInt e1' with (inEval env e2) 
-    inEval env (MkMinus e1 e2) | MkInt e1' | MkInt e2' = MkInt (minus e1' e2')
-    inEval env (MkMinus e1 e2) | MkInt e1' | _ = MkError 
-  inEval env (MkMinus e1 e2) | _ = MkError 
+inEval env (MkInMinus e1 e2) with (inEval env e1)
+  inEval env (MkInMinus e1 e2) | MkInInt e1' with (inEval env e2) 
+    inEval env (MkInMinus e1 e2) | MkInInt e1' | MkInInt e2' = MkInInt (minus e1' e2')
+    inEval env (MkInMinus e1 e2) | MkInInt e1' | _ = MkInError 
+  inEval env (MkInMinus e1 e2) | _ = MkInError 
 
-inEval env (MkIf c t el) with (inEval env c)
-  inEval env (MkIf c t el) | MkInt c' =
+inEval env (MkInIf c t el) with (inEval env c)
+  inEval env (MkInIf c t el) | MkInInt c' =
     if c'==0 then inEval env el else inEval env t 
-  inEval env (MkIf c t el) | _ = MkError
+  inEval env (MkInIf c t el) | _ = MkInError
 -- inEval _ (MkLetRec _ _) = ?hole
 
-inEval env (MkLetRec [] e) = inEval env e 
+inEval env (MkInLetRec [] e) = inEval env e 
 
-inEval {n} env (MkLetRec ((pos, e1)::bnds) e) with (natToFin pos {n})
-    inEval {n} env (MkLetRec ((pos, e1)::bnds) e) | Nothing = MkError 
-    inEval {n} env (MkLetRec ((pos, e1)::bnds) e) | Just l with (replaceAt l (MkInExpr e1) env)
-      inEval {n} env (MkLetRec ((pos, e1)::bnds) e) | Just l | env' = (assert_total (inEval env' (MkLetRec bnds e)))
+inEval {n} env (MkInLetRec ((pos, e1)::bnds) e) with (natToFin pos {n})
+    inEval {n} env (MkInLetRec ((pos, e1)::bnds) e) | Nothing = MkInError 
+    inEval {n} env (MkInLetRec ((pos, e1)::bnds) e) | Just l with (replaceAt l (MkInExpr e1) env)
+      inEval {n} env (MkInLetRec ((pos, e1)::bnds) e) | Just l | env' = (assert_total (inEval env' (MkInLetRec bnds e)))

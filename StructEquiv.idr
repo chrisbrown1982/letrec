@@ -3,6 +3,7 @@ module StructEquiv
 import Letrec
 import DeBruijn
 import Decidable.Equality
+import InExpr
 
 %default total
 
@@ -468,13 +469,17 @@ proveFuncEq : {env1 : Env}
 proveFuncEq {env1} {env2} p1 p1 (MkStructEquiv Refl) = MkFuncEquiv {env1} (MkStructEquiv Refl) Refl 
 
 -------------------------------------------------------------------
+
+indExp : Expr -> InExpr 
+indExp e = ?j
+
 data DeBruijn : (p, d : Expr) -> Type where 
     MkDeBruijn : DeBruijn p (deBruijn 0 p)
 
-data IndexExp : (p : Expr) -> (p' : InExpr e) -> Type where 
-    MkIndex : IndexExp p (indExp p')
+data IndexExp : (p : Expr) -> (p' : InExpr) -> Type where 
+    MkIndex : IndexExp p (indExp p)
 
-data Proj (p, d Expr) -> (p', d' : InExpr e) -> Type where  
+data Proj : (p, d  : Expr) -> (p', d' : InExpr) -> Type where  
     MkProj : DeBruijn p d -> MkIndex p p' -> MkIndex d d' -> p' = d' -> Proj p d p' d'  
 
 {-
@@ -492,7 +497,7 @@ getRelDe {d=deBruijn 0 p} (MkDeBruijn) = deBruijn 0 p
 data StructEquivNew : (px, py : Expr) -> Type where 
     MkStructEquivNew : (d1 = d2) -> DeBruijn px d1 -> DeBruijn py d2 -> Proj px d1 px' p1' -> Proj py d2 py' p2' -> StructEquivNew px py
 
-
+{-
 proveStructEqNew : (p1, p2 : Expr) 
                -> Maybe (StructEquivNew p1 p2)
 proveStructEqNew p1 p2 with (MkDeBruijn {p=p1})  
@@ -501,7 +506,7 @@ proveStructEqNew p1 p2 with (MkDeBruijn {p=p1})
             case decEq (deBruijn 0 p1) (deBruijn 0 p2) of 
                 Yes prf => Just (MkStructEquivNew prf d1 d2)
                 No neq => Nothing 
-
+-}
 -------------------------------------------------------------------
 deLam2 :   {env : Env} 
         -> (v2 : VarName)
@@ -534,7 +539,7 @@ deBruijnLem1 _ _ = ?never
 evalRefl : (p1 : Expr) 
         -> eval (MkEnv []) p1 = eval (MkEnv []) p1 
 evalRefl p1 = Refl
-
+{-
 
 funcEquiv : (p1, p2 : Expr) -> StructEquivNew p1 p2 -> eval (MkEnv []) p1 = eval (MkEnv []) p2
 funcEquiv p1 p2 (MkStructEquivNew dEqd (MkDeBruijn {p=p1}) (MkDeBruijn {p=p2})) with (deBruijnLem1 {env=MkEnv []} p1 (MkDeBruijn {p=p1}))
