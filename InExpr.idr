@@ -31,7 +31,7 @@ replaceInEnv : (xs : Vect k t) -> Elem x xs -> t -> Vect k t
 replaceInEnv (x::xs)  Here         y = y :: xs
 replaceInEnv (x::xs) (There xinxs) y = x :: replaceByElem xs xinxs y
 
-
+public export
 inEval : {n : Nat}
       -> (env : Vect n InValue)
       -> InExpr 

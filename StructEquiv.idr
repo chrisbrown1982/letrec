@@ -4,6 +4,7 @@ import Letrec
 import DeBruijn
 import Decidable.Equality
 import InExpr
+import Data.Vect
 
 %default total
 
@@ -480,22 +481,18 @@ data IndexExp : (p : Expr) -> (p' : InExpr) -> Type where
     MkIndex : IndexExp p (indExp p)
 
 data Proj : (p, d  : Expr) -> (p', d' : InExpr) -> Type where  
-    MkProj : DeBruijn p d -> MkIndex p p' -> MkIndex d d' -> p' = d' -> Proj p d p' d'  
+    MkProj : DeBruijn p d -> IndexExp p p' -> IndexExp d d' -> p' = d' -> Proj p d p' d'  
 
-{-
- p  : Expr 
- d  : deBruijn 0 p
- p' : InExpr e 
- d' : InExpr e 
- Proj p d p' d'
- -> evalIn [] p' = evalIn [] d'
--}
+funEq : (p : Expr) 
+     -> (prj: Proj p d p' d')
+     -> inEval v p' = inEval v d'
+funEq p (MkProj prf1 prf2 prf3 prf4) = rewrite prf4 in Refl
 
-getRelDe : {p,d : Expr} -> DeBruijn p d -> Expr
-getRelDe {d=deBruijn 0 p} (MkDeBruijn) = deBruijn 0 p
+-- getRelDe : {p,d : Expr} -> DeBruijn p d -> Expr
+-- getRelDe {d=deBruijn 0 p} (MkDeBruijn) = deBruijn 0 p
 
-data StructEquivNew : (px, py : Expr) -> Type where 
-    MkStructEquivNew : (d1 = d2) -> DeBruijn px d1 -> DeBruijn py d2 -> Proj px d1 px' p1' -> Proj py d2 py' p2' -> StructEquivNew px py
+-- data StructEquivNew : (px, py : Expr) -> Type where 
+--    MkStructEquivNew : (d1 = d2) -> DeBruijn px d1 -> DeBruijn py d2 -> Proj px d1 px' p1' -> Proj py d2 py' p2' -> StructEquivNew px py
 
 {-
 proveStructEqNew : (p1, p2 : Expr) 
@@ -506,7 +503,7 @@ proveStructEqNew p1 p2 with (MkDeBruijn {p=p1})
             case decEq (deBruijn 0 p1) (deBruijn 0 p2) of 
                 Yes prf => Just (MkStructEquivNew prf d1 d2)
                 No neq => Nothing 
--}
+
 -------------------------------------------------------------------
 deLam2 :   {env : Env} 
         -> (v2 : VarName)
@@ -526,6 +523,7 @@ deLam3 (MkVar v1) v (MkVar v2) with (decEq v v1)
     deLam3 (MkVar v1) v (MkVar v2) | No c    = ?t1
 deLam3 _ _ _ = ?t99
 
+
 deBruijnLem1 : {env : Env} -> (p: Expr) -> DeBruijn p (deBruijn 0 p) -> eval (MkEnv []) p = eval (MkEnv []) (deBruijn 0 p) 
 deBruijnLem1 {env} (MkVar v) x = Refl
 -- with (assert_total (deBruijnLem1 {env} (MkVar v) x))
@@ -539,7 +537,7 @@ deBruijnLem1 _ _ = ?never
 evalRefl : (p1 : Expr) 
         -> eval (MkEnv []) p1 = eval (MkEnv []) p1 
 evalRefl p1 = Refl
-{-
+
 
 funcEquiv : (p1, p2 : Expr) -> StructEquivNew p1 p2 -> eval (MkEnv []) p1 = eval (MkEnv []) p2
 funcEquiv p1 p2 (MkStructEquivNew dEqd (MkDeBruijn {p=p1}) (MkDeBruijn {p=p2})) with (deBruijnLem1 {env=MkEnv []} p1 (MkDeBruijn {p=p1}))
