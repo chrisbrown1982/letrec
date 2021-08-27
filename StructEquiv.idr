@@ -471,14 +471,11 @@ proveFuncEq {env1} {env2} p1 p1 (MkStructEquiv Refl) = MkFuncEquiv {env1} (MkStr
 
 -------------------------------------------------------------------
 
-indExp : Expr -> InExpr 
-indExp e = ?j
-
 data DeBruijn : (p, d : Expr) -> Type where 
     MkDeBruijn : DeBruijn p (deBruijn 0 p)
 
 data IndexExp : (p : Expr) -> (p' : InExpr) -> Type where 
-    MkIndex : IndexExp p (indExp p)
+    MkIndex : IndexExp p (indExp 0 p)
 
 data Proj : (p, d  : Expr) -> (p', d' : InExpr) -> Type where  
     MkProj : DeBruijn p d -> IndexExp p p' -> IndexExp d d' -> p' = d' -> Proj p d p' d'  
