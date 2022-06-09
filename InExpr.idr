@@ -14,6 +14,9 @@ mutual
      MkInError   : InValue 
      MkInExpr    : (e : InExpr) -> InValue 
 
+
+
+
   public export
   data InExpr : Type where 
     MkInVar    : (pos : Nat)  -> InExpr
@@ -26,6 +29,13 @@ mutual
     MkInMul    : (e1 : InExpr) -> (e2 : InExpr) -> InExpr
     MkInMinus  : (e1 : InExpr) -> (e2 : InExpr) -> InExpr 
     MkInIf     : (c : InExpr) -> (t : InExpr) -> (el : InExpr) -> InExpr
+
+
+public export 
+convert : InValue -> Value 
+convert (MkInInt n)  = MkInt n 
+convert MkInError    = MkError 
+convert (MkInExpr e) = MkError
 
 public export
 indExp' : Nat -> Expr -> (Nat, InExpr) 

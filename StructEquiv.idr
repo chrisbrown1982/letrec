@@ -478,12 +478,12 @@ data IndexExp : (p : Expr) -> (p' : InExpr) -> Type where
     MkIndex : IndexExp p (indExp 0 p)
 
 data Proj : (p, d  : Expr) -> (p', d' : InExpr) -> Type where  
-    MkProj : DeBruijn p d -> IndexExp p p' -> IndexExp d d' -> p' = d' -> Proj p d p' d'  
+    MkProj : DeBruijn p d -> IndexExp p p' -> IndexExp d d' -> p' = d' -> eval v p = convert (inEval env p') -> eval v d = convert (inEval env d') -> Proj p d p' d'  
 
 funEq : (p : Expr) 
      -> (prj: Proj p d p' d')
      -> inEval v p' = inEval v d'
-funEq p (MkProj prf1 prf2 prf3 prf4) = rewrite prf4 in Refl
+funEq p (MkProj prf1 prf2 prf3 prf4 prf5 prf6) = rewrite prf4 in Refl
 
 -- getRelDe : {p,d : Expr} -> DeBruijn p d -> Expr
 -- getRelDe {d=deBruijn 0 p} (MkDeBruijn) = deBruijn 0 p

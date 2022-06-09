@@ -64,10 +64,15 @@ mutual
     eval (MkEnv env) (MkApp (MkLam v e) e2) with (eval (MkEnv env) e2 )
         eval (MkEnv env) (MkApp (MkLam v e) e2) | v2 =
             (eval (MkEnv ((v,v2)::env)) e)
+ --   eval (MkEnv env) (MkApp (MkApp e1 e2) e3) with (eval (MkEnv env) e3 )
+ --        eval (MkEnv env) (MkApp (MkApp e1 e2) e3) | v2 = 
+ --            eval (MkEnv ((v,v2)::env)) (MkApp e1 e2)
         -- in case v1 of 
         --    MkClosure env1 (MkLam x e) => assert_total (eval (MkEnv ((x,v2)::env)) e)
         --    _ => MkError 
-    eval (MkEnv env) (MkApp e1 e2) = MkError
+    eval (MkEnv env) (MkApp e1 e2) =  MkError
+  --      eval (MkEnv env) (MkApp e1 e2) | e2' with (eval (MkEnv env) e1) 
+  --          eval (MkEnv env) (MkApp e1 e2) | e2' | e1' = eval (MkEnv env) (MkApp e1' e2')
     eval (MkEnv env) (MkBind x1 e1 e) = 
         let v    = eval (MkEnv env) e1
             env' = MkEnv ((x1, v)::env)
